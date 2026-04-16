@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>苹果开发者后台 AB 测试功能研究报告</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0e1117;--bg2:#141820;--surface:#1a1f2e;--surface2:#1f2638;
+  --border:#252d40;--border2:#2e3850;
+  --blue:#4a90e8;--blue-dim:rgba(74,144,232,0.1);--blue-glow:rgba(74,144,232,0.06);
+  --gold:#e8b84a;--gold-dim:rgba(232,184,74,0.1);
+  --green:#4ae89a;--green-dim:rgba(74,232,154,0.08);
+  --red:#e85a4a;--red-dim:rgba(232,90,74,0.08);
+  --purple:#a04ae8;--purple-dim:rgba(160,74,232,0.1);
+  --text:#dde3f0;--text2:#8a94b0;--text3:#4a5270;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:'Noto Sans SC',sans-serif;font-weight:300;line-height:1.8}
+.wrap{max-width:980px;margin:0 auto;padding:0 40px}
+
+/* NAV */
+#nav{position:sticky;top:0;z-index:100;background:rgba(14,17,23,0.96);backdrop-filter:blur(12px);border-bottom:1px solid var(--border2)}
+.nav-inner{max-width:980px;margin:0 auto;padding:0 40px;display:flex;align-items:center;overflow-x:auto;scrollbar-width:none}
+.nav-inner::-webkit-scrollbar{display:none}
+.nav-logo{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;color:var(--blue);padding:13px 16px 13px 0;border-right:1px solid var(--border2);margin-right:4px;flex-shrink:0;white-space:nowrap}
+.nav-item{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);padding:13px 14px;cursor:pointer;border-bottom:2px solid transparent;transition:color 0.15s,border-color 0.15s;text-decoration:none;display:block;flex-shrink:0;white-space:nowrap}
+.nav-item:hover{color:var(--text2)}
+.nav-item.active{color:var(--blue);border-bottom-color:var(--blue)}
+
+/* HEADER */
+header{padding:80px 0 64px;border-bottom:1px solid var(--border2);position:relative}
+header::before{content:'';position:absolute;top:0;left:-40px;right:-40px;height:2px;background:linear-gradient(90deg,transparent,var(--blue),rgba(74,144,232,0.3),transparent)}
+.eyebrow{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:4px;text-transform:uppercase;color:var(--blue);margin-bottom:24px;display:flex;align-items:center;gap:12px}
+.eyebrow::before{content:'';display:inline-block;width:24px;height:1px;background:var(--blue)}
+h1{font-family:'Noto Serif SC',serif;font-size:clamp(26px,3.5vw,40px);font-weight:700;line-height:1.2;margin-bottom:16px}
+h1 span{background:linear-gradient(135deg,var(--blue),#7ab8f5);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.subtitle{font-size:14px;color:var(--text2);max-width:580px;line-height:1.8}
+.htags{display:flex;flex-wrap:wrap;gap:10px;margin-top:28px}
+.htag{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:2px;text-transform:uppercase;padding:5px 12px;border:1px solid var(--border2);color:var(--text3);border-radius:2px}
+.htag.on{border-color:rgba(74,144,232,0.4);color:var(--blue);background:var(--blue-dim)}
+
+/* SECTIONS */
+section{margin:72px 0}
+.sh{display:flex;align-items:baseline;gap:16px;margin-bottom:36px;padding-bottom:14px;border-bottom:1px solid var(--border2)}
+.sn{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text3)}
+h2{font-family:'Noto Serif SC',serif;font-size:22px;font-weight:700;color:var(--text)}
+
+/* TOOL CARDS - overview */
+.tool-overview{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin:28px 0}
+.tc{background:var(--surface);border:1px solid var(--border2);border-radius:3px;padding:24px;border-top:2px solid transparent;transition:border-color 0.2s}
+.tc.t-ppo{border-top-color:var(--blue)}
+.tc.t-cpp{border-top-color:var(--green)}
+.tc.t-tf{border-top-color:var(--gold)}
+.tc.t-ent{border-top-color:var(--red)}
+.tc-icon{font-size:24px;margin-bottom:12px}
+.tc-name{font-family:'Noto Serif SC',serif;font-size:16px;font-weight:700;color:var(--text);margin-bottom:6px}
+.tc-en{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:1px;color:var(--text3);margin-bottom:12px}
+.tc-desc{font-size:12px;color:var(--text2);line-height:1.7}
+.tc-badge{display:inline-block;margin-top:12px;padding:3px 8px;border-radius:2px;font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:1px;text-transform:uppercase}
+.badge-blue{background:var(--blue-dim);color:var(--blue)}
+.badge-green{background:var(--green-dim);color:var(--green)}
+.badge-gold{background:var(--gold-dim);color:var(--gold)}
+.badge-red{background:var(--red-dim);color:var(--red)}
+.badge-gray{background:rgba(74,82,112,0.2);color:var(--text3)}
+
+/* DETAIL CARDS */
+.detail-card{background:var(--surface);border:1px solid var(--border2);border-radius:3px;overflow:hidden;margin:24px 0}
+.dc-header{display:grid;grid-template-columns:200px 1fr;border-bottom:1px solid var(--border2)}
+.dc-left{padding:28px;background:var(--surface2);border-right:1px solid var(--border2)}
+.dc-name{font-family:'Noto Serif SC',serif;font-size:20px;font-weight:700;color:var(--text);margin-bottom:4px}
+.dc-en{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:1px;color:var(--text3);margin-bottom:16px}
+.dc-stats{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text3);line-height:2}
+.dc-stats strong{color:var(--blue)}
+.dc-right{padding:24px 28px}
+.dc-right h4{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:14px}
+.spec-rows{display:flex;flex-direction:column;gap:10px}
+.sr{display:grid;grid-template-columns:110px 1fr;gap:12px;font-size:13px;line-height:1.5}
+.sk{font-weight:500;color:var(--text2);flex-shrink:0}
+.sv{color:var(--text3)}
+.sv.good{color:var(--green)}
+.sv.warn{color:var(--gold)}
+.sv.bad{color:var(--red)}
+.dc-insight{padding:14px 24px;border-top:1px solid var(--border2);display:flex;gap:12px;align-items:flex-start}
+.di-lbl{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:2px;text-transform:uppercase;flex-shrink:0;padding-top:2px}
+.di-lbl.blue{color:var(--blue)}
+.di-lbl.green{color:var(--green)}
+.di-lbl.gold{color:var(--gold)}
+.di-lbl.red{color:var(--red)}
+.di-tx{font-size:12px;color:var(--text2);line-height:1.7}
+.di-tx strong{font-weight:500}
+.dc-body{padding:20px 28px}
+.dc-body p{font-size:13px;color:var(--text2);line-height:1.8;margin-bottom:10px}
+.dc-body p:last-child{margin-bottom:0}
+.dc-body strong{color:var(--text);font-weight:500}
+.dc-body h5{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin:16px 0 8px}
+.dc-body ul{list-style:none;display:flex;flex-direction:column;gap:5px}
+.dc-body ul li{font-size:13px;color:var(--text2);display:flex;gap:8px;line-height:1.5}
+.dc-body ul li::before{content:'›';color:var(--blue);flex-shrink:0}
+.dc-flow{display:flex;align-items:center;flex-wrap:wrap;gap:8px;padding:16px 28px;background:var(--bg2);border-top:1px solid var(--border)}
+.flow-step{font-family:'JetBrains Mono',monospace;font-size:10px;background:var(--surface2);border:1px solid var(--border2);padding:5px 10px;border-radius:2px;color:var(--text2);white-space:nowrap}
+.flow-arrow{color:var(--text3);font-size:12px}
+
+/* AB METHOD CARDS */
+.method-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin:20px 0}
+.mc{background:var(--surface);border:1px solid var(--border2);padding:20px;border-radius:3px}
+.mc-num{font-family:'JetBrains Mono',monospace;font-size:22px;font-weight:700;color:var(--border2);line-height:1;margin-bottom:10px}
+.mc h4{font-size:14px;font-weight:500;color:var(--text);margin-bottom:8px}
+.mc p{font-size:12px;color:var(--text2);line-height:1.7;margin-bottom:10px}
+.mc .mc-pro{font-size:11px;color:var(--green);display:flex;gap:6px;margin-bottom:4px}
+.mc .mc-con{font-size:11px;color:var(--red);display:flex;gap:6px}
+.mc .mc-pro::before{content:'✓';flex-shrink:0}
+.mc .mc-con::before{content:'✗';flex-shrink:0}
+
+/* COMPARISON TABLE */
+.comp-wrap{overflow-x:auto;margin:24px 0}
+.comp-table{width:100%;border-collapse:collapse;font-size:12px;min-width:700px}
+.comp-table th{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:2px;text-transform:uppercase;text-align:left;padding:12px 14px;background:var(--surface2);border-bottom:2px solid var(--border2);color:var(--text3);white-space:nowrap}
+.comp-table th.h-ppo{border-bottom-color:var(--blue);color:var(--blue)}
+.comp-table th.h-cpp{border-bottom-color:var(--green);color:var(--green)}
+.comp-table th.h-tf{border-bottom-color:var(--gold);color:var(--gold)}
+.comp-table th.h-ent{border-bottom-color:var(--red);color:var(--red)}
+.comp-table td{padding:12px 14px;border-bottom:1px solid var(--border);color:var(--text2);vertical-align:top;line-height:1.5}
+.comp-table tr:last-child td{border-bottom:none}
+.comp-table tr:hover td{background:rgba(74,144,232,0.02)}
+.comp-table td:first-child{font-weight:500;color:var(--text);white-space:nowrap;font-size:11px}
+.tag-good{color:var(--green);font-family:'JetBrains Mono',monospace;font-size:10px}
+.tag-warn{color:var(--gold);font-family:'JetBrains Mono',monospace;font-size:10px}
+.tag-bad{color:var(--red);font-family:'JetBrains Mono',monospace;font-size:10px}
+
+/* 18YAOBA SECTION */
+.rec-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:24px 0}
+.rc{background:var(--surface);border:1px solid var(--border2);padding:22px;border-radius:3px}
+.rc-lbl{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:8px}
+.rc h4{font-size:14px;font-weight:500;color:var(--text);margin-bottom:12px}
+.rc ul{list-style:none;display:flex;flex-direction:column;gap:6px}
+.rc ul li{font-size:12px;color:var(--text2);display:flex;gap:8px;line-height:1.5}
+.rc ul li::before{content:'→';flex-shrink:0;font-family:'JetBrains Mono',monospace;font-size:10px}
+.rc.now ul li::before{color:var(--blue)}
+.rc.future ul li::before{color:var(--gold)}
+.rc.notok{border-color:rgba(232,90,74,0.2);background:var(--red-dim)}
+.rc.notok ul li::before{color:var(--red)}
+.rc.ok{border-color:rgba(74,232,154,0.2)}
+.rc.ok ul li::before{color:var(--green)}
+
+.ab-list{display:flex;flex-direction:column;gap:14px;margin:20px 0}
+.ab-item{display:grid;grid-template-columns:24px 1fr auto;gap:14px;align-items:start;background:var(--surface);border:1px solid var(--border2);padding:18px 20px;border-radius:3px}
+.ab-num{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:var(--text3);padding-top:2px}
+.ab-content h4{font-size:14px;font-weight:500;color:var(--text);margin-bottom:4px}
+.ab-content p{font-size:12px;color:var(--text2);line-height:1.6}
+.pri-badge{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:1px;text-transform:uppercase;padding:4px 8px;border-radius:2px;white-space:nowrap;flex-shrink:0}
+.pri-hi{background:var(--blue);color:#0e1117}
+.pri-mid{background:var(--blue-dim);color:var(--blue);border:1px solid rgba(74,144,232,0.3)}
+.pri-lo{background:var(--surface2);color:var(--text3);border:1px solid var(--border2)}
+
+/* NOTE / WARNING BOXES */
+.notebox{padding:16px 20px;border-radius:3px;font-size:13px;line-height:1.7;margin:16px 0}
+.notebox.info{background:var(--blue-dim);border:1px solid rgba(74,144,232,0.2);border-left:3px solid var(--blue);color:#8ab8f0}
+.notebox.warn{background:var(--gold-dim);border:1px solid rgba(232,184,74,0.2);border-left:3px solid var(--gold);color:#c0a060}
+.notebox.danger{background:var(--red-dim);border:1px solid rgba(232,90,74,0.2);border-left:3px solid var(--red);color:#c08080}
+.notebox strong{font-weight:500}
+.notebox.info strong{color:#a0c8ff}
+.notebox.warn strong{color:var(--gold)}
+.notebox.danger strong{color:var(--red)}
+
+/* CONCLUSION */
+.conc{margin:64px 0 80px;padding:40px 44px;background:var(--surface);border:1px solid var(--border2);border-radius:3px;position:relative;overflow:hidden}
+.conc::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--blue),rgba(74,144,232,0.3),transparent)}
+.conc h3{font-family:'Noto Serif SC',serif;font-size:18px;font-weight:700;color:var(--text);margin-bottom:16px}
+.conc p{font-size:13px;color:var(--text2);line-height:1.9;margin-bottom:10px}
+.conc strong{color:var(--text);font-weight:500}
+
+footer{border-top:1px solid var(--border2);padding:28px 0;display:flex;justify-content:space-between;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:1px;color:var(--text3)}
+
+@media(max-width:720px){
+  .wrap{padding:0 20px}.tool-overview{grid-template-columns:1fr 1fr}
+  .dc-header{grid-template-columns:1fr}.dc-left{border-right:none;border-bottom:1px solid var(--border2)}
+  .method-grid{grid-template-columns:1fr}.rec-grid{grid-template-columns:1fr}
+  .ab-item{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav id="nav">
+  <div class="nav-inner">
+    <span class="nav-logo">18YAOBA</span>
+    <a class="nav-item active" href="#sec-top">概述</a>
+    <a class="nav-item" href="#sec-01">01 工具总览</a>
+    <a class="nav-item" href="#sec-02">02 PPO</a>
+    <a class="nav-item" href="#sec-03">03 CPP</a>
+    <a class="nav-item" href="#sec-04">04 TestFlight</a>
+    <a class="nav-item" href="#sec-05">05 企业签名</a>
+    <a class="nav-item" href="#sec-06">06 横向对比</a>
+    <a class="nav-item" href="#sec-07">07 平台参考</a>
+  </div>
+</nav>
+
+<div class="wrap">
+
+<!-- HEADER -->
+<header id="sec-top">
+  <div class="eyebrow">研究报告 · 苹果开发者后台 · AB测试专项</div>
+  <h1>苹果开发者后台<br><span>AB 测试功能研究报告</span></h1>
+  <p class="subtitle">系统梳理苹果开发者体系中 PPO、CPP、TestFlight、企业签名四个工具的功能定位、操作方式与适用场景，并结合 18YAOBA 平台现状给出参考建议。</p>
+  <div class="htags">
+    <span class="htag on">App Store Connect</span>
+    <span class="htag on">PPO · CPP · TestFlight</span>
+    <span class="htag on">企业签名分发</span>
+    <span class="htag">AB测试方法论</span>
+    <span class="htag">平台商业化参考</span>
+  </div>
+</header>
+
+<!-- SECTION 01: 工具总览 -->
+<section>
+  <div class="sh" id="sec-01"><span class="sn">01 /</span><h2>四个工具定位总览</h2></div>
+
+  <div class="tool-overview">
+    <div class="tc t-ppo">
+      <div class="tc-icon">🎯</div>
+      <div class="tc-name">产品页面优化</div>
+      <div class="tc-en">PPO</div>
+      <div class="tc-desc">苹果唯一的官方原生 AB 测试工具，专门测试 App Store 落地页素材对下载转化率的影响，苹果自动分流+出报告。</div>
+      <span class="tc-badge badge-blue">官方 AB 测试</span>
+    </div>
+    <div class="tc t-cpp">
+      <div class="tc-icon">🗂️</div>
+      <div class="tc-name">自定义产品页面</div>
+      <div class="tc-en">CPP</div>
+      <div class="tc-desc">不是 AB 测试工具，而是针对不同渠道用户展示不同版本落地页的工具，最多建35个版本，配合买量投放使用。</div>
+      <span class="tc-badge badge-green">渠道落地页定制</span>
+    </div>
+    <div class="tc t-tf">
+      <div class="tc-icon">✈️</div>
+      <div class="tc-name">TestFlight</div>
+      <div class="tc-en">Beta 分发平台</div>
+      <div class="tc-desc">苹果官方 Beta 版本分发工具，把未上线的 App 发给测试用户收集反馈。本身不是 AB 测试工具，需开发者自己搭建测试逻辑。</div>
+      <span class="tc-badge badge-gold">Beta 测试分发</span>
+    </div>
+    <div class="tc t-ent">
+      <div class="tc-icon">🔑</div>
+      <div class="tc-name">企业签名分发</div>
+      <div class="tc-en">Enterprise Distribution</div>
+      <div class="tc-desc">不走 App Store，用企业开发者证书直接分发 iOS 安装包，不需要苹果审核内容，适合无法过 App Store 审核的类型。</div>
+      <span class="tc-badge badge-red">绕过审核分发</span>
+    </div>
+  </div>
+
+  <div class="notebox info">
+    <strong>前提条件：</strong>PPO、CPP、TestFlight 三个工具都需要持有苹果开发者账号（年费 $99），且 App 必须提交过 App Store Connect。其中 PPO 和 CPP 还需要 App 已正式上架 App Store。企业签名需要苹果企业开发者账号（年费 $299）。
+  </div>
+</section>
+
+<!-- SECTION 02: PPO -->
+<section>
+  <div class="sh" id="sec-02"><span class="sn">02 /</span><h2>产品页面优化（PPO）</h2></div>
+
+  <div class="detail-card">
+    <div class="dc-header">
+      <div class="dc-left">
+        <div class="dc-name">PPO</div>
+        <div class="dc-en">Product Page Optimization</div>
+        <div class="dc-stats">
+          支持系统 <strong>iOS 15+</strong><br>
+          最多方案数 <strong>3个+原始</strong><br>
+          最长运行 <strong>90天</strong><br>
+          数据来源 <strong>App Analytics</strong><br>
+          开发成本 <strong>低（无需改代码）</strong>
+        </div>
+        <span class="tc-badge badge-blue" style="margin-top:14px">苹果唯一原生AB测试</span>
+      </div>
+      <div class="dc-right">
+        <h4>能测 / 不能测的元素</h4>
+        <div class="spec-rows">
+          <div class="sr"><span class="sk">✅ 可以测</span><span class="sv good">应用图标 · 截图（最多10张）· 预览视频</span></div>
+          <div class="sr"><span class="sk">❌ 不能测</span><span class="sv bad">应用名称 · 副标题 · 描述文案 · 关键词 · 价格 · 评分评价</span></div>
+          <div class="sr"><span class="sk">流量分配</span><span class="sv">自定义比例，例如3个方案各占10%，剩余70%看原始页面</span></div>
+          <div class="sr"><span class="sk">多语言支持</span><span class="sv good">同一测试可针对不同地区用不同素材</span></div>
+          <div class="sr"><span class="sk">审核要求</span><span class="sv warn">截图/视频需审核（无需新版本）；图标必须随App版本一起提交</span></div>
+          <div class="sr"><span class="sk">数据质量</span><span class="sv good">真实自然流量 + 苹果统计置信度，无需自己判断显著性</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="dc-body">
+      <h5>操作流程</h5>
+      <div class="dc-flow">
+        <span class="flow-step">App Store Connect</span><span class="flow-arrow">→</span>
+        <span class="flow-step">选择App</span><span class="flow-arrow">→</span>
+        <span class="flow-step">产品页面优化</span><span class="flow-arrow">→</span>
+        <span class="flow-step">创建测试+设流量比例</span><span class="flow-arrow">→</span>
+        <span class="flow-step">上传素材</span><span class="flow-arrow">→</span>
+        <span class="flow-step">提交审核</span><span class="flow-arrow">→</span>
+        <span class="flow-step">开启测试</span><span class="flow-arrow">→</span>
+        <span class="flow-step">等置信度达标</span><span class="flow-arrow">→</span>
+        <span class="flow-step">应用胜出方案</span>
+      </div>
+
+      <h5>核心注意事项</h5>
+      <ul>
+        <li>测试期间发布新版本 App 可能干扰结果，苹果会有警告提示</li>
+        <li>每次建议只改一个元素——同时改图标+截图+视频，分不清哪个因素起效</li>
+        <li>图标测试门槛高，必须提前把新图标打进安装包随版本更新，截图/视频测试更简单</li>
+        <li>样本量要足够才能等到置信度达标，流量少的App可能90天都跑不出结论</li>
+        <li>苹果只提供「哪个版本转化率更高」，不告诉你「为什么」，需要自己推测原因</li>
+      </ul>
+    </div>
+
+    <div class="dc-insight">
+      <span class="di-lbl blue">核心价值</span>
+      <span class="di-tx">PPO 是苹果体系里<strong>数据质量最高</strong>的测试工具——真实自然流量、苹果自动出置信度报告、不需要自己搭统计框架。缺点是只能测视觉素材，不能测文案、功能、定价等其他元素。</span>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 03: CPP -->
+<section>
+  <div class="sh" id="sec-03"><span class="sn">03 /</span><h2>自定义产品页面（CPP）</h2></div>
+
+  <div class="detail-card">
+    <div class="dc-header">
+      <div class="dc-left">
+        <div class="dc-name">CPP</div>
+        <div class="dc-en">Custom Product Pages</div>
+        <div class="dc-stats">
+          最多页面数 <strong>35个</strong><br>
+          触达方式 <strong>专属URL/广告</strong><br>
+          2025新功能 <strong>关键词绑定</strong><br>
+          审核要求 <strong>第一版需审核</strong><br>
+          开发成本 <strong>低（无需改代码）</strong>
+        </div>
+        <span class="tc-badge badge-green" style="margin-top:14px">渠道定制落地页</span>
+      </div>
+      <div class="dc-right">
+        <h4>CPP 的核心能力</h4>
+        <div class="spec-rows">
+          <div class="sr"><span class="sk">可定制内容</span><span class="sv good">截图 · 预览视频 · 宣传文本</span></div>
+          <div class="sr"><span class="sk">不可定制</span><span class="sv bad">应用名称 · 图标 · 评分评价 · 价格</span></div>
+          <div class="sr"><span class="sk">页面数上限</span><span class="sv">每个App最多35个自定义页面</span></div>
+          <div class="sr"><span class="sk">触达方式</span><span class="sv">每个CPP有独立URL，只有通过该URL进入的用户才会看到</span></div>
+          <div class="sr"><span class="sk">2025新增</span><span class="sv good">关键词绑定：搜索特定词的用户自动看到对应CPP（仅苹果推荐词可选）</span></div>
+          <div class="sr"><span class="sk">是否AB测试</span><span class="sv warn">严格来说不是，是渠道定制工具；配合PPO使用效果最好</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="dc-body">
+      <h5>典型使用场景</h5>
+      <ul>
+        <li>买量投放：Facebook 广告来的用户看强调「休闲玩法」的截图；搜索广告来的用户看强调「二次元画风」的截图</li>
+        <li>关键词定制：用户搜索「成人游戏」时看到专属定制页面，提升搜索转化率</li>
+        <li>节日活动：情人节期间特定渠道展示节日主题页面</li>
+        <li>配合PPO：先用PPO测出最优素材，再把最优素材作为CPP的基底做渠道差异化</li>
+      </ul>
+
+      <h5>CPP vs PPO 核心区别</h5>
+      <ul>
+        <li><strong>PPO</strong> 是测试工具，面向所有自然流量，目的是找到最好的默认页面</li>
+        <li><strong>CPP</strong> 是定制工具，面向特定渠道流量，目的是针对不同用户群展示最匹配的内容</li>
+        <li>两者不冲突，先用PPO确定最优基础素材，再用CPP做渠道差异化，是最常见的组合用法</li>
+      </ul>
+    </div>
+
+    <div class="dc-insight">
+      <span class="di-lbl green">核心价值</span>
+      <span class="di-tx">CPP 的价值在于<strong>渠道精准匹配</strong>——不同来源的用户看到最符合其预期的页面，提升付费广告的ROI。2025年新增的关键词绑定功能让自然搜索流量也能受益，是目前最值得关注的新功能。</span>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 04: TestFlight -->
+<section>
+  <div class="sh" id="sec-04"><span class="sn">04 /</span><h2>TestFlight</h2></div>
+
+  <div class="notebox warn">
+    <strong>重要前提：</strong>TestFlight 本身不是 AB 测试工具，苹果不会给你出「A方案比B方案转化率高12%」这样的报告。用 TestFlight 做 AB 测试，是开发者自己在上面搭的方案，苹果只提供分发通道，测试逻辑和数据统计全靠自己实现。
+  </div>
+
+  <div class="detail-card">
+    <div class="dc-header">
+      <div class="dc-left">
+        <div class="dc-name">TestFlight</div>
+        <div class="dc-en">Beta 测试分发平台</div>
+        <div class="dc-stats">
+          内部测试 <strong>最多100人</strong><br>
+          外部测试 <strong>最多1万人</strong><br>
+          同时Build数 <strong>最多100个</strong><br>
+          Build有效期 <strong>90天</strong><br>
+          邀请方式 <strong>邮件 / 公开链接</strong>
+        </div>
+        <span class="tc-badge badge-gold" style="margin-top:14px">Beta分发+手动AB测试</span>
+      </div>
+      <div class="dc-right">
+        <h4>TestFlight 能提供 / 不能提供的数据</h4>
+        <div class="spec-rows">
+          <div class="sr"><span class="sk">✅ 能提供</span><span class="sv good">崩溃报告 · 用户截图反馈 · 安装量 · 会话数 · 设备/系统分布</span></div>
+          <div class="sr"><span class="sk">❌ 不能提供</span><span class="sv bad">转化率对比 · 付费转化 · 点击热图 · 漏斗分析（需自己接后台）</span></div>
+          <div class="sr"><span class="sk">审核要求</span><span class="sv warn">外部测试第一个Build需苹果审核，后续Build通常免审</span></div>
+          <div class="sr"><span class="sk">数据可信度</span><span class="sv warn">偏低——测试用户是主动参与者，非真实随机用户，代表性有限</span></div>
+          <div class="sr"><span class="sk">AB测试支持</span><span class="sv warn">需开发者自己实现，TestFlight只提供分发通道</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="dc-body">
+      <h5>用 TestFlight 搭 AB 测试的三种方式</h5>
+    </div>
+
+    <div class="method-grid" style="padding:0 28px 20px">
+      <div class="mc">
+        <div class="mc-num">01</div>
+        <h4>分组分发不同包</h4>
+        <p>打两个版本的App，在TestFlight建两个测试组，A组收到A包，B组收到B包，通过自己的后台对比行为数据。</p>
+        <div class="mc-pro">操作简单，无需复杂技术</div>
+        <div class="mc-con">需维护两个包；用户非随机，代表性差</div>
+      </div>
+      <div class="mc">
+        <div class="mc-num">02</div>
+        <h4>服务端控制分组</h4>
+        <p>一个包里同时包含A和B两套逻辑，通过服务端下发配置决定每个用户看哪个版本。TestFlight只负责分发这个包。</p>
+        <div class="mc-pro">一套代码，测完直接发正式版</div>
+        <div class="mc-con">开发成本较高，需搭建配置系统</div>
+      </div>
+      <div class="mc">
+        <div class="mc-num">03</div>
+        <h4>灰度预上线</h4>
+        <p>把新版本先通过TestFlight发给1万名测试用户，观察数据稳定后再正式上线，作为功能上线前的缓冲层。</p>
+        <div class="mc-pro">降低正式上线风险</div>
+        <div class="mc-con">不是严格AB测试；测试用户画像偏差</div>
+      </div>
+    </div>
+
+    <div class="dc-insight">
+      <span class="di-lbl gold">核心价值</span>
+      <span class="di-tx">TestFlight 最大的价值是<strong>上线前的功能验证和崩溃测试</strong>，而非 AB 测试。如果要在上面做 AB 测试，推荐用「服务端控制分组」的方式，开发成本虽高但数据质量和可维护性更好。</span>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 05: 企业签名 -->
+<section>
+  <div class="sh" id="sec-05"><span class="sn">05 /</span><h2>企业签名分发</h2></div>
+
+  <div class="notebox danger">
+    <strong>风险提示：</strong>企业签名分发违反苹果开发者协议中「企业账号仅用于内部员工」的条款。苹果会主动吊销违规使用的企业证书，轻则用户 App 突然打不开，重则开发者账号被封禁。这是同类平台普遍面临的最大技术风险。
+  </div>
+
+  <div class="detail-card">
+    <div class="dc-header">
+      <div class="dc-left">
+        <div class="dc-name">企业签名</div>
+        <div class="dc-en">Enterprise Distribution</div>
+        <div class="dc-stats">
+          账号费用 <strong>$299/年</strong><br>
+          分发方式 <strong>直接下载IPA</strong><br>
+          用户数限制 <strong>理论无限制</strong><br>
+          苹果审核 <strong>无需内容审核</strong><br>
+          稳定性 <strong>差（随时掉签）</strong>
+        </div>
+        <span class="tc-badge badge-red" style="margin-top:14px">高风险·绕过审核</span>
+      </div>
+      <div class="dc-right">
+        <h4>企业签名 vs App Store 分发对比</h4>
+        <div class="spec-rows">
+          <div class="sr"><span class="sk">内容审核</span><span class="sv good">无需苹果内容审核，成人向内容可分发</span></div>
+          <div class="sr"><span class="sk">安装方式</span><span class="sv">用户通过链接下载IPA，需在设置里「信任」开发者证书才能打开</span></div>
+          <div class="sr"><span class="sk">证书稳定性</span><span class="sv bad">苹果定期巡查，发现违规即吊销证书，用户App立即打不开（掉签）</span></div>
+          <div class="sr"><span class="sk">应对掉签</span><span class="sv warn">需持续备用多套证书轮换，或购买第三方超级签名服务</span></div>
+          <div class="sr"><span class="sk">用户体验</span><span class="sv warn">安装步骤比App Store复杂，需要手动信任证书，转化率偏低</span></div>
+          <div class="sr"><span class="sk">AB测试</span><span class="sv warn">可以配合TestFlight或服务端分组做AB测试，与TestFlight逻辑相同</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="dc-body">
+      <h5>企业签名的几种形式</h5>
+      <ul>
+        <li><strong>自持企业账号：</strong>自己申请苹果企业开发者账号（$299/年），自己签名分发。优点是成本低，缺点是证书被吊销后需要时间重新申请</li>
+        <li><strong>第三方超级签名：</strong>购买第三方平台的签名服务，通常按设备数或月费计费。平台手里有大量企业证书轮换，单个证书掉签影响较小，但费用较高且依赖第三方</li>
+        <li><strong>个人签名（TF外部测试）：</strong>利用 TestFlight 外部测试的公开链接分发，不需要企业账号，只需普通开发者账号（$99/年），但有1万人上限且需要苹果审核</li>
+      </ul>
+
+      <h5>同类平台的普遍做法</h5>
+      <ul>
+        <li>安卓用户：直接提供 APK 下载（无需任何审核，最稳定）</li>
+        <li>iOS 用户：企业签名或超级签名分发 IPA，同时保持 H5 作为备用通道</li>
+        <li>掉签应对：预先准备多套备用证书，检测到掉签后快速切换，减少用户无法使用的时间窗口</li>
+      </ul>
+    </div>
+
+    <div class="dc-insight">
+      <span class="di-lbl red">核心价值与风险</span>
+      <span class="di-tx">企业签名是<strong>绕过苹果内容审核的唯一可行路径</strong>，对于无法过 App Store 审核的平台来说是刚需。但掉签风险是持续存在的运营成本，需要有专人维护证书稳定性，或预算购买稳定的第三方超级签名服务。<strong>建议始终保持 H5 作为 iOS 用户的备用访问通道。</strong></span>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 06: 横向对比 -->
+<section>
+  <div class="sh" id="sec-06"><span class="sn">06 /</span><h2>四个工具完整横向对比</h2></div>
+
+  <div class="comp-wrap">
+    <table class="comp-table">
+      <thead>
+        <tr>
+          <th>对比维度</th>
+          <th class="h-ppo">PPO</th>
+          <th class="h-cpp">CPP</th>
+          <th class="h-tf">TestFlight</th>
+          <th class="h-ent">企业签名</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>本质定位</td><td>官方原生AB测试</td><td>渠道定制落地页</td><td>Beta版本分发平台</td><td>绕过审核直接分发</td></tr>
+        <tr><td>是否是AB测试工具</td><td><span class="tag-good">✓ 是</span></td><td><span class="tag-warn">△ 非严格意义</span></td><td><span class="tag-warn">△ 需自建逻辑</span></td><td><span class="tag-warn">△ 需自建逻辑</span></td></tr>
+        <tr><td>测试/作用对象</td><td>App Store页面素材</td><td>App Store各渠道展示</td><td>App内部功能/UI/流程</td><td>iOS App分发与功能测试</td></tr>
+        <tr><td>流量来源</td><td>真实自然流量</td><td>付费渠道指定流量</td><td>主动参与的测试用户</td><td>通过链接下载的用户</td></tr>
+        <tr><td>分组方式</td><td>苹果自动随机分流</td><td>按渠道URL分流</td><td>开发者手动管理</td><td>开发者手动/服务端控制</td></tr>
+        <tr><td>最大方案/页面数</td><td>3个+原始页面</td><td>最多35个页面</td><td>理论无限制</td><td>理论无限制</td></tr>
+        <tr><td>运行时长上限</td><td>90天</td><td>无限制</td><td>Build有效期90天</td><td>无限制</td></tr>
+        <tr><td>数据来源</td><td>苹果App Analytics</td><td>苹果App Analytics</td><td>自己的后台+崩溃日志</td><td>自己的后台</td></tr>
+        <tr><td>数据可信度</td><td><span class="tag-good">高（真实用户+置信度）</span></td><td><span class="tag-warn">中（付费流量）</span></td><td><span class="tag-warn">低（非随机用户）</span></td><td><span class="tag-warn">中（需自建统计）</span></td></tr>
+        <tr><td>需要苹果审核</td><td>素材需审核</td><td>第一版需审核</td><td>外部测试第一Build</td><td><span class="tag-good">无需内容审核</span></td></tr>
+        <tr><td>需要App Store上架</td><td><span class="tag-bad">必须已上架</span></td><td><span class="tag-bad">必须已上架</span></td><td>无需上架</td><td>无需上架</td></tr>
+        <tr><td>开发成本</td><td><span class="tag-good">低（无需改代码）</span></td><td><span class="tag-good">低（无需改代码）</span></td><td>中到高</td><td>中（需打包/维护证书）</td></tr>
+        <tr><td>稳定性</td><td><span class="tag-good">高</span></td><td><span class="tag-good">高</span></td><td><span class="tag-good">高</span></td><td><span class="tag-bad">低（随时掉签风险）</span></td></tr>
+        <tr><td>适合成人向内容</td><td><span class="tag-bad">✗ App Store会拒审</span></td><td><span class="tag-bad">✗ App Store会拒审</span></td><td><span class="tag-warn">△ 测试环节可用</span></td><td><span class="tag-good">✓ 唯一可行路径</span></td></tr>
+        <tr><td>账号费用</td><td>$99/年（含）</td><td>$99/年（含）</td><td>$99/年（含）</td><td>$299/年+</td></tr>
+        <tr><td>适合使用阶段</td><td>上线后持续素材优化</td><td>投放期渠道定制</td><td>上线前功能验证</td><td>iOS用户分发（长期）</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- SECTION 07: 18YAOBA参考 -->
+<section>
+  <div class="sh" id="sec-07"><span class="sn">07 /</span><h2>对 18YAOBA 的参考建议</h2></div>
+
+  <div class="rec-grid">
+    <div class="rc notok">
+      <div class="rc-lbl">现阶段用不了</div>
+      <h4>PPO · CPP</h4>
+      <ul>
+        <li>需要 App 已在 App Store 正式上架</li>
+        <li>成人向内容无法通过 App Store 审核</li>
+        <li>目前对 18YAOBA 参考意义大于实际使用价值</li>
+        <li>若未来有合规内容 App 上架，PPO 是首选测试工具</li>
+      </ul>
+    </div>
+    <div class="rc ok">
+      <div class="rc-lbl">iOS分发首选</div>
+      <h4>企业签名分发</h4>
+      <ul>
+        <li>让 iOS 用户安装原生 App 的唯一可行路径</li>
+        <li>建议同时保留 H5 作为备用通道，掉签时用户不断线</li>
+        <li>推荐用第三方超级签名服务保证稳定性</li>
+        <li>可在 App 内用服务端分组做 AB 测试，逻辑与 TestFlight 方式二相同</li>
+      </ul>
+    </div>
+    <div class="rc future">
+      <div class="rc-lbl">功能测试参考</div>
+      <h4>TestFlight</h4>
+      <ul>
+        <li>如果上线企业签名 App，可用 TestFlight 做内部小范围功能验证</li>
+        <li>推荐「服务端控制分组」方式搭 AB 测试，不要打两个包</li>
+        <li>适合新功能（如看板娘、新充值页）上线前的灰度验证</li>
+        <li>注意：测试用户≠真实大盘用户，数据仅供参考</li>
+      </ul>
+    </div>
+    <div class="rc now">
+      <div class="rc-lbl">现阶段可以借鉴的思路</div>
+      <h4>苹果AB测试方法论 → 平台自建</h4>
+      <ul>
+        <li>借鉴 PPO 的随机流量分流：按用户ID尾号随机分A/B组</li>
+        <li>借鉴服务端控制分组：后台配置哪些用户看哪套UI</li>
+        <li>借鉴单变量原则：每次只改一个元素</li>
+        <li>借鉴置信度等待：样本量足够再下结论</li>
+      </ul>
+    </div>
+  </div>
+
+  <div style="margin-top:28px">
+    <div class="sh" style="margin-bottom:20px"><span class="sn" style="font-size:12px;color:var(--blue)">结合平台数据 /</span><h2 style="font-size:18px">现阶段最值得优先做的 AB 测试</h2></div>
+    <div class="ab-list">
+      <div class="ab-item">
+        <div class="ab-num">01</div>
+        <div class="ab-content">
+          <h4>新人注册后充值引导的触发时机</h4>
+          <p>当前新人当日付费转化率仅1.22%，98%新用户注册当天不付费。测试：注册后立即弹出充值引导 vs 第一次下载游戏后弹出 vs 注册满24小时后推送，哪个时机转化率最高。这是当前提升空间最大的测试点。</p>
+        </div>
+        <span class="pri-badge pri-hi">最高优先级</span>
+      </div>
+      <div class="ab-item">
+        <div class="ab-num">02</div>
+        <div class="ab-content">
+          <h4>充值页面产品排列顺序</h4>
+          <p>G点套餐放前面 vs VIP套餐放前面，哪个带来更高的首次付费转化。结合留存用户客单价¥91远高于新人¥48的数据，VIP产品的展示位置可能对ARPU有显著影响。</p>
+        </div>
+        <span class="pri-badge pri-hi">最高优先级</span>
+      </div>
+      <div class="ab-item">
+        <div class="ab-num">03</div>
+        <div class="ab-content">
+          <h4>永久卡价格展示方式</h4>
+          <p>「¥488 <del>原价¥888</del>」划线展示 vs「限时特惠¥488」文案 vs 直接展示「¥488」，哪种方式点击率和转化率更高。划线价的「锚定效应」是否对这类用户有效值得验证。</p>
+        </div>
+        <span class="pri-badge pri-mid">中优先级</span>
+      </div>
+      <div class="ab-item">
+        <div class="ab-num">04</div>
+        <div class="ab-content">
+          <h4>游戏详情页199G点标价的视觉呈现</h4>
+          <p>大字醒目显示「199G点」vs 折算成人民币「约¥2」vs 强调「限时首发」，哪种呈现方式对下载转化率影响最大。当前每次下载消耗约25G点的实际数据可作为基准对比。</p>
+        </div>
+        <span class="pri-badge pri-mid">中优先级</span>
+      </div>
+      <div class="ab-item">
+        <div class="ab-num">05</div>
+        <div class="ab-content">
+          <h4>周末大促 Banner 文案与视觉</h4>
+          <p>数据显示周末日活比工作日高54%，是促销活动效果最大化的时间窗口。测试：「充值返赠20%」vs「今日充值最多多送20%」vs「限时48小时」，哪种文案点击率更高。</p>
+        </div>
+        <span class="pri-badge pri-lo">低优先级</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CONCLUSION -->
+<div class="conc">
+  <h3>总结</h3>
+  <p>苹果开发者后台的四个工具中，<strong>PPO 数据质量最高但需要 App Store 上架</strong>，对 18YAOBA 当前阶段不可用；<strong>CPP 是渠道定制工具而非 AB 测试</strong>，同样依赖 App Store 上架；<strong>TestFlight 是分发工具</strong>，本身不带 AB 测试能力，需要开发者自建逻辑；<strong>企业签名是让 iOS 用户使用原生 App 的唯一可行路径</strong>，但掉签风险是持续的运营成本，需要配套维护方案。</p>
+  <p>对于 18YAOBA 来说，<strong>现阶段最实际的行动</strong>是：iOS 用户用企业签名或第三方超级签名分发 App，同时保留 H5 作为备用；在 App 内通过服务端分组自建 AB 测试体系，借鉴 PPO 的单变量原则和随机分流逻辑；优先测试对收入影响最直接的充值引导时机和页面排列顺序，结合平台数据（新人转化率1.22%）持续迭代。</p>
+  <p>PPO 和 CPP 的工具价值在于提供了一套<strong>「怎么科学测试」的方法论</strong>，这套思路完全可以移植到 H5/安卓平台的自建 AB 测试体系中，这是比工具本身更有长期价值的参考。</p>
+</div>
+
+<footer>
+  <span>18YAOBA · 苹果AB测试工具研究报告 · 2026年4月</span>
+  <span>数据来源：Apple Developer Documentation · App Store Connect Help · WWDC 2025</span>
+</footer>
+
+</div>
+
+<script>
+document.querySelectorAll('a.nav-item').forEach(function(a){
+  a.addEventListener('click',function(e){
+    e.preventDefault();
+    var id=this.getAttribute('href').replace('#','');
+    var el=document.getElementById(id);
+    if(el){
+      var offset=document.getElementById('nav').offsetHeight+16;
+      var top=el.getBoundingClientRect().top+window.scrollY-offset;
+      window.scrollTo({top:top,behavior:'smooth'});
+    }
+  });
+});
+var sections=['sec-top','sec-01','sec-02','sec-03','sec-04','sec-05','sec-06','sec-07'];
+var nh=0;
+window.addEventListener('scroll',function(){
+  if(!nh)nh=document.getElementById('nav').offsetHeight;
+  var sy=window.scrollY+nh+40;
+  var cur=sections[0];
+  sections.forEach(function(id){
+    var el=document.getElementById(id);
+    if(el&&el.getBoundingClientRect().top+window.scrollY<=sy)cur=id;
+  });
+  document.querySelectorAll('.nav-item').forEach(function(a){
+    a.classList.toggle('active',a.getAttribute('href')==='#'+cur);
+  });
+});
+</script>
+</body>
+</html>
