@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AB测试平台开发需求文档 v1.0 · 18GAME后台</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=Noto+Serif+SC:wght@400;700&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#fafaf8;--bg2:#f3f2ef;--surface:#fff;--border:#e2e0da;--border2:#d0cec7;--accent:#1a56db;--accent-dim:#ebf0ff;--gold:#c27803;--gold-dim:#fef3c7;--green:#057a55;--green-dim:#d1fae5;--red:#c81e1e;--red-dim:#fde8e8;--orange:#b43403;--orange-dim:#feecdc;--purple:#6b21a8;--purple-dim:#f3e8ff;--text:#111827;--text2:#4b5563;--text3:#9ca3af;--ink:#1f2937}
+*{margin:0;padding:0;box-sizing:border-box}html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:"Noto Sans SC",sans-serif;font-weight:300;line-height:1.75;font-size:14px}
+#nav{position:sticky;top:0;z-index:200;background:rgba(250,250,248,.97);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);box-shadow:0 1px 3px rgba(0,0,0,.05)}
+.nav-wrap{max-width:1120px;margin:0 auto;padding:0 40px;display:flex;align-items:center;overflow-x:auto;scrollbar-width:none}
+.nav-wrap::-webkit-scrollbar{display:none}
+.nav-logo{font-family:"JetBrains Mono",monospace;font-size:11px;font-weight:700;color:var(--accent);padding:12px 16px 12px 0;border-right:1px solid var(--border);margin-right:4px;flex-shrink:0;white-space:nowrap}
+.nav-item{font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:1.2px;text-transform:uppercase;color:var(--text3);padding:12px 11px;border-bottom:2px solid transparent;transition:color .15s,border-color .15s;text-decoration:none;display:block;flex-shrink:0;white-space:nowrap;cursor:pointer}
+.nav-item:hover{color:var(--text2)}.nav-item.active{color:var(--accent);border-bottom-color:var(--accent)}
+.wrap{max-width:1120px;margin:0 auto;padding:0 40px}
+header{padding:60px 0 44px;border-bottom:2px solid var(--border)}
+.doc-meta{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px}
+.meta-tag{font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;padding:4px 10px;border-radius:3px;background:var(--accent-dim);color:var(--accent);border:1px solid rgba(26,86,219,.2)}
+.meta-tag.warn{background:var(--gold-dim);color:var(--gold);border-color:rgba(194,120,3,.2)}
+.meta-tag.ok{background:var(--green-dim);color:var(--green);border-color:rgba(5,122,85,.2)}
+h1{font-family:"Noto Serif SC",serif;font-size:clamp(24px,3vw,36px);font-weight:700;color:var(--ink);line-height:1.2;margin-bottom:12px}
+.doc-sub{font-size:15px;color:var(--text2);max-width:680px;line-height:1.9}
+section{padding:52px 0;border-bottom:1px solid var(--border)}
+section:last-of-type{border-bottom:none}
+.sh{display:flex;align-items:baseline;gap:14px;margin-bottom:28px}
+.sn{font-family:"JetBrains Mono",monospace;font-size:11px;color:var(--text3);flex-shrink:0}
+h2{font-family:"Noto Serif SC",serif;font-size:22px;font-weight:700;color:var(--ink)}
+h3{font-size:15px;font-weight:500;color:var(--ink);margin:28px 0 12px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+h4{font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin:20px 0 8px}
+p{color:var(--text2);line-height:1.8;margin-bottom:10px}p strong{color:var(--text);font-weight:500}p:last-child{margin-bottom:0}
+.nb{padding:14px 18px;border-radius:4px;font-size:13px;line-height:1.75;margin:14px 0;border-left:3px solid}
+.nb.info{background:var(--accent-dim);border-color:var(--accent);color:#1e429f}
+.nb.warn{background:var(--gold-dim);border-color:var(--gold);color:#92400e}
+.nb.ok{background:var(--green-dim);border-color:var(--green);color:#065f46}
+.nb.danger{background:var(--red-dim);border-color:var(--red);color:#991b1b}
+.nb strong{font-weight:600}
+code{font-family:"JetBrains Mono",monospace;font-size:12px;background:var(--bg2);padding:2px 6px;border-radius:3px;border:1px solid var(--border);color:var(--accent)}
+.dt{width:100%;border-collapse:collapse;font-size:13px;border:1px solid var(--border)}
+.dt th{padding:10px 14px;background:var(--bg2);font-weight:500;color:var(--text2);text-align:left;border-bottom:1px solid var(--border2);font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:1px;text-transform:uppercase;white-space:nowrap}
+.dt td{padding:10px 14px;border-bottom:1px solid var(--border);color:var(--text2);vertical-align:top;line-height:1.6}
+.dt tr:last-child td{border-bottom:none}
+.dt tr:hover td{background:var(--bg2)}
+.dt td:first-child{color:var(--text);font-weight:500}.dt-wrap{overflow-x:auto;margin:14px 0}
+.state-flow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:16px 0;padding:18px;background:var(--bg2);border-radius:4px;border:1px solid var(--border)}
+.state{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:500;white-space:nowrap;border:1px solid}
+.s-draft{background:var(--bg2);color:var(--text2);border-color:var(--border2)}
+.s-running{background:var(--green-dim);color:var(--green);border-color:rgba(5,122,85,.3)}
+.s-paused{background:var(--gold-dim);color:var(--gold);border-color:rgba(194,120,3,.3)}
+.s-ended{background:#f3f4f6;color:var(--text3);border-color:var(--border2)}
+.arrow{color:var(--text3);font-size:14px;font-weight:700}
+ul.doc-list{list-style:none;padding:0;margin:10px 0;display:flex;flex-direction:column;gap:6px}
+ul.doc-list li{display:flex;gap:10px;font-size:13px;color:var(--text2);line-height:1.6}
+ul.doc-list li::before{content:"·";color:var(--accent);font-size:16px;flex-shrink:0;line-height:1.3}
+ul.doc-list li strong{color:var(--text);font-weight:500}
+.def-grid{display:grid;grid-template-columns:170px 1fr;border:1px solid var(--border);border-radius:4px;overflow:hidden;margin:14px 0}
+.def-k{padding:10px 14px;background:var(--bg2);font-weight:500;font-size:13px;color:var(--text);border-bottom:1px solid var(--border)}
+.def-v{padding:10px 14px;font-size:13px;color:var(--text2);border-bottom:1px solid var(--border);line-height:1.7}
+.def-grid>div:nth-last-child(-n+2){border-bottom:none}
+.spec-card{border:1px solid var(--border);border-radius:4px;overflow:hidden;margin:14px 0}
+.spec-head{padding:10px 16px;background:var(--bg2);border-bottom:1px solid var(--border);font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--text3)}
+.sr{display:grid;grid-template-columns:170px 1fr;padding:11px 16px;border-bottom:1px solid var(--border);font-size:13px;align-items:start;gap:14px}
+.sr:last-child{border-bottom:none}
+.sk{font-weight:500;color:var(--text);flex-shrink:0;line-height:1.6}.sv{color:var(--text2);line-height:1.6}
+.sv.g{color:var(--green);font-weight:500}.sv.w{color:var(--gold);font-weight:500}.sv.r{color:var(--red);font-weight:500}
+.steps{display:flex;flex-direction:column;gap:0;margin:16px 0}
+.step{display:grid;grid-template-columns:48px 1fr;gap:0}
+.step-left{display:flex;flex-direction:column;align-items:center;padding-top:4px}
+.step-num{width:28px;height:28px;border-radius:50%;background:var(--accent);color:white;font-family:"JetBrains Mono",monospace;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.step-line{width:1px;flex:1;background:var(--border2);margin-top:8px}.step:last-child .step-line{display:none}
+.step-body{padding:0 0 24px 16px}.step-title{font-weight:500;color:var(--text);font-size:14px;margin-bottom:8px}
+.step-desc{font-size:13px;color:var(--text2);line-height:1.7}
+.metric-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:14px 0}
+.mc{border:1px solid var(--border);border-radius:4px;padding:18px;background:var(--surface)}
+.mc-lbl{font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);margin-bottom:8px}
+.mc-formula{font-family:"JetBrains Mono",monospace;font-size:13px;color:var(--accent);margin-bottom:8px;font-weight:600}
+.mc-desc{font-size:12px;color:var(--text2);line-height:1.6}
+.rule-list{display:flex;flex-direction:column;gap:10px;margin:14px 0}
+.rule-item{display:grid;grid-template-columns:90px 1fr;gap:12px;align-items:start;background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:14px 16px}
+.rule-k{font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--text3);padding-top:2px}
+.rule-v{font-size:13px;color:var(--text2);line-height:1.7}.rule-v strong{color:var(--text);font-weight:500}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:14px 0}
+.col-card{border:1px solid var(--border);border-radius:4px;overflow:hidden}
+.col-head{padding:10px 16px;font-weight:500;font-size:13px;border-bottom:1px solid var(--border)}
+.col-head.a{background:var(--accent-dim);color:var(--accent)}.col-head.b{background:var(--green-dim);color:var(--green)}
+.col-body{padding:14px 16px}
+.p0{font-family:"JetBrains Mono",monospace;font-size:10px;font-weight:700;color:var(--red)}
+.p1{font-family:"JetBrains Mono",monospace;font-size:10px;font-weight:700;color:var(--gold)}
+.tag-yes{font-family:"JetBrains Mono",monospace;font-size:11px;color:var(--green);font-weight:700}
+.tag-no{font-family:"JetBrains Mono",monospace;font-size:11px;color:var(--text3)}
+.tag-req{font-family:"JetBrains Mono",monospace;font-size:11px;color:var(--accent)}
+.scenario-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:14px 0}
+.sc{border:1px solid var(--border);border-radius:4px;padding:18px;background:var(--surface)}
+.sc-icon{font-size:24px;margin-bottom:10px}
+.sc-name{font-size:13px;font-weight:500;color:var(--text);margin-bottom:6px}
+.sc-desc{font-size:12px;color:var(--text2);line-height:1.6}
+footer{border-top:1px solid var(--border);padding:28px 0;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:1px;color:var(--text3)}
+@media(max-width:720px){.wrap{padding:0 20px}.metric-grid,.two-col,.scenario-grid{grid-template-columns:1fr}.sr,.def-grid,.rule-item{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<nav id="nav"><div class="nav-wrap">
+<span class="nav-logo">18GAME · PRD</span>
+<a class="nav-item active" href="#top">概述</a>
+<a class="nav-item" href="#s01">01 定位</a>
+<a class="nav-item" href="#s02">02 角色权限</a>
+<a class="nav-item" href="#s03">03 状态流转</a>
+<a class="nav-item" href="#s04">04 分群命中</a>
+<a class="nav-item" href="#s05">05 试验配置</a>
+<a class="nav-item" href="#s06">06 列表页</a>
+<a class="nav-item" href="#s07">07 新建编辑</a>
+<a class="nav-item" href="#s08">08 数据看板</a>
+<a class="nav-item" href="#s09">09 暂停结束</a>
+<a class="nav-item" href="#s10">10 前端接入</a>
+<a class="nav-item" href="#s11">11 技术规范</a>
+<a class="nav-item" href="#s12">12 验收标准</a>
+</div></nav>
+
+<div class="wrap">
+<header id="top">
+<div class="doc-meta">
+<span class="meta-tag">产品需求文档 · PRD</span>
+<span class="meta-tag">后台功能 · 运营工具</span>
+<span class="meta-tag warn">v1.0</span>
+<span class="meta-tag ok">2026年4月</span>
+</div>
+<h1>AB 测试平台开发需求文档</h1>
+<p class="doc-sub">建立一套通用的 AB 测试配置平台，内置于18GAME后台。运营人员可以自由选择要测试的页面板块，自行配置对照组和实验组的内容变量，系统负责用户分流、下发对应版本，并提供数据看板对比两组效果差异。</p>
+</header>
+
+<section><div class="sh" id="s01"><span class="sn">01 /</span><h2>定位与目标</h2></div>
+
+<h3>1.1 背景与目的</h3>
+<p>目前平台各页面的内容配置（如首页 Banner、充值套餐排列、游戏推荐位、弹窗文案等）调整后无法量化效果，运营只能靠经验判断。AB 测试平台的目标是让运营可以科学地验证任何一处页面改动的实际效果——先在一部分用户中测试新版本，对比关键指标差异，数据说话后再决定是否全量推出。</p>
+
+<h3>1.2 核心定位</h3>
+<p>这是一个<strong>通用的 AB 测试配置工具</strong>，不绑定任何特定的业务场景。运营可以用它测试平台内任意页面的任意板块，包括但不限于：</p>
+<div class="scenario-grid">
+<div class="sc"><div class="sc-icon">💰</div><div class="sc-name">充值页</div><div class="sc-desc">套餐排列顺序、价格展示方式、VIP与G点的优先展示位置、新人专属价格</div></div>
+<div class="sc"><div class="sc-icon">🏠</div><div class="sc-name">首页</div><div class="sc-desc">Banner 图片/文案、推荐游戏排列、弹窗触发时机、活动入口位置</div></div>
+<div class="sc"><div class="sc-icon">🎮</div><div class="sc-name">游戏详情页</div><div class="sc-desc">下载按钮文案、价格标注方式、截图排列顺序、推荐相关游戏的展示逻辑</div></div>
+<div class="sc"><div class="sc-icon">🎁</div><div class="sc-name">活动页</div><div class="sc-desc">活动规则文案、奖励展示方式、参与引导步骤、倒计时样式</div></div>
+<div class="sc"><div class="sc-icon">👤</div><div class="sc-name">个人中心</div><div class="sc-desc">会员权益展示方式、充值入口引导文案、签到/积分模块位置</div></div>
+<div class="sc"><div class="sc-icon">📢</div><div class="sc-name">引导弹窗</div><div class="sc-desc">注册后引导弹窗内容、首次进入充值页的提示文案、新人任务引导顺序</div></div>
+</div>
+
+<h3>1.3 功能范围</h3>
+<ul class="doc-list">
+<li><strong>支持：</strong>运营自定义试验名称、选择测试板块、配置对照组和实验组的变量值</li>
+<li><strong>支持：</strong>四种固定分群条件（新用户/老用户/充值过/未充值），每次试验选一种</li>
+<li><strong>支持：</strong>试验完整生命周期管理（创建/上线/暂停/结束/复制）</li>
+<li><strong>支持：</strong>以点击/曝光为核心的数据看板，对比两组用户的行为差异</li>
+
+</ul>
+
+<h3>1.4 核心术语</h3>
+<div class="def-grid">
+<div class="def-k">试验</div><div class="def-v">一次 AB 测试的完整单元，有唯一编号、完整生命周期（草稿→运行中→已结束）和独立的数据看板。每个试验只测试一个变量。</div>
+<div class="def-k">测试板块</div><div class="def-v">运营选择要进行 AB 测试的页面区域，例如「充值页-套餐排列」「首页-Banner」「游戏详情页-下载按钮文案」。测试板块决定了前端在哪个位置读取 AB 分组结果并展示对应版本。</div>
+<div class="def-k">变量</div><div class="def-v">在选定的测试板块中，对照组和实验组之间唯一不同的那个配置项。每次试验只允许改变一个变量，其余保持一致，确保测试结论的可靠性。</div>
+<div class="def-k">对照组（Control）</div><div class="def-v">基准方案，使用当前线上已有的版本配置，作为衡量实验组效果的参照基准。</div>
+<div class="def-k">实验组（Experiment）</div><div class="def-v">待验证的新版本，配置希望测试的新内容，与对照组的变量值必须不同。</div>
+<div class="def-k">分群</div><div class="def-v">筛选哪些用户有资格参与本次试验的条件。支持四种固定分群，每个试验只能选一种。不在分群内的用户不参与试验，始终看默认版本。</div>
+<div class="def-k">命中</div><div class="def-v">用户满足试验的全部参与条件（试验运行中+在生效时间内+满足分群），系统将其分配到对照组或实验组的行为。一旦命中，全程固定在同一组。</div>
+<div class="def-k">默认版本</div><div class="def-v">用户未命中任何试验时，页面展示的原始配置版本。暂停或结束试验后，所有用户立即回退到默认版本。</div>
+</div>
+</section>
+
+<section><div class="sh" id="s02"><span class="sn">02 /</span><h2>角色与权限</h2></div>
+<div class="dt-wrap"><table class="dt">
+<thead><tr><th>操作</th><th>运营</th><th>产品</th><th>前提条件</th><th>说明</th></tr></thead>
+<tbody>
+<tr><td>查看试验列表/看板</td><td><span class="tag-yes">✓</span></td><td><span class="tag-yes">✓</span></td><td>已登录</td><td>所有角色均可查看</td></tr>
+<tr><td>新建试验</td><td><span class="tag-yes">✓</span></td><td><span class="tag-no">—</span></td><td>有发布权限</td><td>仅运营可操作</td></tr>
+<tr><td>编辑试验</td><td><span class="tag-yes">✓</span></td><td><span class="tag-no">—</span></td><td>草稿或暂停状态</td><td>运行中禁止编辑，前后端均拦截</td></tr>
+<tr><td>删除草稿</td><td><span class="tag-yes">✓</span></td><td><span class="tag-no">—</span></td><td>草稿状态</td><td>需二次确认弹窗</td></tr>
+<tr><td>上线试验</td><td><span class="tag-yes">✓</span></td><td><span class="tag-no">—</span></td><td>有发布权限+校验通过</td><td>上线前需通过全部校验</td></tr>
+<tr><td>暂停试验</td><td><span class="tag-yes">✓</span></td><td><span class="tag-no">—</span></td><td>有发布权限+运行中</td><td>暂停后用户立即回退默认版本</td></tr>
+<tr><td>结束试验</td><td><span class="tag-yes">✓</span></td><td><span class="tag-no">—</span></td><td>有发布权限+运行中或暂停</td><td>结束后不可再上线，需二次确认</td></tr>
+<tr><td>复制试验</td><td><span class="tag-yes">✓</span></td><td><span class="tag-yes">✓</span></td><td>已登录</td><td>所有状态均可复制，复制为新草稿</td></tr>
+</tbody></table></div>
+<div class="nb warn"><strong>双重拦截：</strong>「运行中禁止编辑」需前端将编辑按钮置灰；后端编辑接口也需校验状态，运行中状态返回错误拒绝请求，不能只靠前端拦截。「发布权限」是独立权限位，运营账号默认拥有，产品账号默认没有，可由管理员配置。</div>
+</section>
+
+<section><div class="sh" id="s03"><span class="sn">03 /</span><h2>状态与流转规则</h2></div>
+<h3>3.1 状态流转</h3>
+<div class="state-flow">
+<span class="state s-draft">● 草稿</span><span class="arrow">→ 上线 →</span>
+<span class="state s-running">● 运行中</span><span class="arrow">→ 暂停 →</span>
+<span class="state s-paused">● 暂停</span><span class="arrow">→ 重新上线 →</span>
+<span class="state s-running">● 运行中</span><span class="arrow">→ 结束 →</span>
+<span class="state s-ended">● 已结束</span>
+</div>
+<p style="font-size:12px;color:var(--text3);margin-top:4px">注：运行中可直接结束，无需先暂停</p>
+
+<div class="dt-wrap"><table class="dt">
+<thead><tr><th>状态</th><th>含义</th><th>前端展示</th><th>用户侧行为</th><th>可执行操作</th></tr></thead>
+<tbody>
+<tr><td>草稿</td><td>已创建但未上线，配置中</td><td>灰色标签</td><td>无影响，所有用户看默认版本</td><td>编辑、上线、复制、删除</td></tr>
+<tr><td>运行中</td><td>试验进行中，正在对用户生效</td><td>绿色标签</td><td>命中用户看对应组版本；未命中看默认版本</td><td>暂停、结束、查看数据、复制；<strong>禁止编辑</strong></td></tr>
+<tr><td>暂停</td><td>试验暂停，停止对用户分流</td><td>橙色标签</td><td>所有用户立即回退到默认版本</td><td>编辑、重新上线、结束、查看数据、复制</td></tr>
+<tr><td>已结束</td><td>试验归档，永久终止</td><td>灰色标签</td><td>所有用户回退到默认版本</td><td>查看数据、复制</td></tr>
+</tbody></table></div>
+
+<h3>3.2 关键约束</h3>
+<ul class="doc-list">
+<li><strong>同一时间只允许一个试验处于运行中</strong>——上线新试验前，系统自动检查是否存在其他运行中的试验，若存在则拦截并提示，同时展示当前运行中的试验名称和跳转链接</li>
+<li><strong>运行中禁止编辑</strong>——必须先暂停才能修改任何配置，修改后重新校验上线</li>
+<li><strong>暂停/结束后立即生效</strong>——执行操作后，用户下次访问对应页面时立即看到默认版本，不存在延迟</li>
+<li><strong>结束操作不可撤回</strong>——结束后数据永久保留可查看，但试验不可再次激活，只能复制为新草稿</li>
+</ul>
+
+<h3>3.3 状态变更日志</h3>
+<p>每次状态变更需记录操作日志：试验编号、变更前状态、变更后状态、操作人（自动结束填「system」）、操作时间。用于审计和问题排查。</p>
+</section>
+
+<section><div class="sh" id="s04"><span class="sn">04 /</span><h2>分群与命中规则</h2></div>
+<h3>4.1 固定分群定义</h3>
+<div class="dt-wrap"><table class="dt">
+<thead><tr><th>分群名称</th><th>判断逻辑</th><th>判断字段</th><th>适用场景</th></tr></thead>
+<tbody>
+<tr><td>新用户</td><td>注册时间晚于试验开始时间</td><td><code>register_time > experiment_start_time</code></td><td>测试对新注册用户的引导内容、首充激励方式</td></tr>
+<tr><td>老用户</td><td>注册时间早于或等于试验开始时间</td><td><code>register_time ≤ experiment_start_time</code></td><td>测试对存量用户的活跃/复购激励内容</td></tr>
+<tr><td>充值过用户</td><td>历史存在至少1笔支付成功的充值订单</td><td><code>paid_order_count > 0</code></td><td>测试对已付费用户的高价值内容推荐或套餐升级引导</td></tr>
+<tr><td>未充值用户</td><td>历史不存在任何支付成功的充值订单</td><td><code>paid_order_count = 0</code></td><td>测试对从未付费用户的首充转化引导内容</td></tr>
+</tbody></table></div>
+<div class="nb info"><strong>单选限制：</strong>每个试验只能选择一种固定分群，不支持多选或组合条件。分群在试验创建时确定，上线后不可修改（需先暂停）。</div>
+
+<h3>4.2 命中规则（三个条件同时满足）</h3>
+<div class="rule-list">
+<div class="rule-item"><div class="rule-k">条件 1</div><div class="rule-v"><strong>试验状态为运行中</strong>——草稿、暂停、已结束状态的试验不对任何用户生效</div></div>
+<div class="rule-item"><div class="rule-k">条件 2</div><div class="rule-v"><strong>当前时间在生效时间范围内</strong>——若设置了开始时间，需 current_time ≥ start_time；若设置了结束时间，需 current_time ≤ end_time</div></div>
+<div class="rule-item"><div class="rule-k">条件 3</div><div class="rule-v"><strong>用户满足该试验的固定分群条件</strong>——不满足分群的用户不参与试验，接口返回 <code>hit: false</code>，页面展示默认版本</div></div>
+</div>
+
+<h3>4.3 分流算法</h3>
+<div class="spec-card"><div class="spec-head">分流算法规格</div>
+<div class="sr"><span class="sk">算法</span><span class="sv">基于用户ID + 试验ID的哈希取模，同一用户在同一试验中始终落在同一组，不会因刷新、换设备（登录状态下）而变化</span></div>
+<div class="sr"><span class="sk">具体实现</span><span class="sv"><code>bucket = MD5(user_id + "_" + experiment_id)</code> 的整数值对2取模；结果为0 → 对照组；结果为1 → 实验组</span></div>
+<div class="sr"><span class="sk">分组单元</span><span class="sv r">必须使用用户ID，禁止使用Session ID或Cookie——同一用户清缓存、换浏览器后Session会变化，导致分组漂移，数据污染</span></div>
+<div class="sr"><span class="sk">未登录用户</span><span class="sv">未登录用户没有user_id，不参与任何试验，接口返回 <code>hit: false</code>，展示默认版本</span></div>
+<div class="sr"><span class="sk">分组缓存</span><span class="sv">分组结果缓存于Redis：Key为 <code>ab:group:{experiment_id}:{user_id}</code>，TTL设置为试验结束时间+1小时</span></div>
+<div class="sr"><span class="sk">跨试验独立</span><span class="sv">用户在不同试验中的分组完全独立，互不影响</span></div>
+</div>
+
+<h3>4.4 SRM 分组完整性检查</h3>
+<div class="nb warn"><strong>建议实现：</strong>后端每天定时对所有运行中的试验执行卡方检验，检验实际两组用户数与预期50/50的偏差。p值 &lt; 0.01 判定为异常，在数据看板顶部展示警告：「⚠️ 当前试验两组用户比例存在显著偏差（对照组:实验组 = X:Y），数据结论可能不准确，请排查分组逻辑。」</div>
+</section>
+
+<section><div class="sh" id="s05"><span class="sn">05 /</span><h2>试验配置规则</h2></div>
+<h3>5.1 测试板块与变量配置</h3>
+<p>每个试验包含三个核心配置项：<strong>测试板块</strong>（测哪里）、<strong>对照组变量值</strong>（原来是什么）、<strong>实验组变量值</strong>（新版本是什么）。</p>
+
+<div class="dt-wrap"><table class="dt">
+<thead><tr><th>配置项</th><th>说明</th><th>示例</th></tr></thead>
+<tbody>
+<tr><td>测试板块</td><td>选择要进行AB测试的页面区域。系统维护一个板块列表，运营从中选择，也可申请新增板块（需技术配合前端接入）。板块名称应清晰描述位置，如「充值页-套餐排列」「首页-顶部Banner」</td><td>充值页-套餐排列、首页-顶部Banner、游戏详情页-下载按钮文案</td></tr>
+<tr><td>对照组变量值</td><td>该板块当前线上正在使用的版本配置，作为基准。变量值的格式由具体板块决定，可以是文字、图片链接、配置JSON等</td><td>「立即下载」、套餐ID列表[A,B,C]、Banner图片URL</td></tr>
+<tr><td>实验组变量值</td><td>想要验证效果的新版本配置，必须与对照组变量值不同</td><td>「免费体验」、套餐ID列表[B,C,A]、新Banner图片URL</td></tr>
+</tbody></table></div>
+
+<h3>5.2 板块类型与变量格式</h3>
+<div class="dt-wrap"><table class="dt">
+<thead><tr><th>板块类型</th><th>变量值格式</th><th>前端读取方式</th><th>示例场景</th></tr></thead>
+<tbody>
+<tr><td>文案类</td><td>纯文本字符串</td><td>直接替换对应位置的显示文字</td><td>按钮文案、标题文案、引导语</td></tr>
+<tr><td>图片类</td><td>图片URL或图片ID</td><td>替换对应位置的图片资源</td><td>Banner图片、活动海报、游戏封面</td></tr>
+<tr><td>排列顺序类</td><td>ID数组，如 <code>[id1,id2,id3]</code></td><td>按数组顺序渲染对应内容列表</td><td>套餐排列顺序、推荐游戏顺序</td></tr>
+<tr><td>开关类</td><td>布尔值 <code>true/false</code></td><td>控制某个功能模块是否展示</td><td>是否展示倒计时、是否展示会员角标</td></tr>
+<tr><td>配置JSON类</td><td>JSON对象字符串</td><td>解析JSON后渲染对应的复合内容</td><td>弹窗的标题+内容+按钮文案组合配置</td></tr>
+</tbody></table></div>
+
+<div class="nb info"><strong>单变量原则：</strong>每次试验只允许改变一个变量，对照组和实验组其余所有配置保持完全一致。同时改变多个变量会导致无法判断是哪个因素影响了结果。如果确实需要测试多个变量，应创建多个独立的试验，分批测试。</div>
+
+<h3>5.3 上线前校验（9条）</h3>
+<div class="dt-wrap"><table class="dt">
+<thead><tr><th>#</th><th>校验项</th><th>校验逻辑</th><th>失败提示</th></tr></thead>
+<tbody>
+<tr><td>1</td><td>试验名称不为空</td><td>name.trim().length > 0</td><td>请填写试验名称</td></tr>
+<tr><td>2</td><td>负责人不为空</td><td>owner字段不为空</td><td>请填写负责人</td></tr>
+<tr><td>3</td><td>固定分群已选择</td><td>segment字段不为空</td><td>请选择分群条件</td></tr>
+<tr><td>4</td><td>测试板块已选择</td><td>module字段不为空</td><td>请选择测试板块</td></tr>
+<tr><td>5</td><td>对照组变量值不为空</td><td>control_value不为空</td><td>请填写对照组配置内容</td></tr>
+<tr><td>6</td><td>实验组变量值不为空</td><td>experiment_value不为空</td><td>请填写实验组配置内容</td></tr>
+<tr><td>7</td><td>两组变量值不同</td><td>control_value ≠ experiment_value</td><td>实验组配置不能与对照组完全相同，请修改</td></tr>
+<tr><td>8</td><td>时间设置合法</td><td>若设置了开始和结束时间，start_time &lt; end_time；指定开始时间时 start_time > 当前时间</td><td>时间设置不合法，请检查开始和结束时间</td></tr>
+<tr><td>9</td><td>无其他运行中试验</td><td>后端查询是否存在status=running的试验</td><td>当前已有运行中的试验「XXX」，请先暂停或结束后再上线新试验</td></tr>
+</tbody></table></div>
+</section>
+
+<section><div class="sh" id="s06"><span class="sn">06 /</span><h2>试验列表页</h2></div>
+<h3>6.1 列表字段</h3>
+<div class="dt-wrap"><table class="dt">
+<thead><tr><th>字段</th><th>说明</th><th>排序</th></tr></thead>
+<tbody>
+<tr><td>试验编号</td><td>系统自动生成，格式建议：AB-YYYYMMDD-XXXX，可点击复制</td><td>—</td></tr>
+<tr><td>试验名称</td><td>运营填写，超出宽度省略，悬停展示完整名称</td><td>—</td></tr>
+<tr><td>测试板块</td><td>选择的页面板块，如「充值页-套餐排列」</td><td>—</td></tr>
+<tr><td>分群</td><td>所选固定分群名称</td><td>—</td></tr>
+<tr><td>状态</td><td>草稿/运行中/暂停/已结束，不同状态不同颜色标签</td><td>—</td></tr>
+<tr><td>生效时间</td><td>试验开始时间；立即生效则展示实际上线时间</td><td>↑↓</td></tr>
+<tr><td>结束时间</td><td>指定结束时间或「—」（手动结束）；已结束展示实际结束时间</td><td>↑↓</td></tr>
+<tr><td>创建人</td><td>操作账号名</td><td>—</td></tr>
+<tr><td>更新时间</td><td>最近一次修改或状态变更时间，默认按此字段倒序排列</td><td>↑↓</td></tr>
+<tr><td>操作</td><td>根据状态动态展示可用操作按钮</td><td>—</td></tr>
+</tbody></table></div>
+
+<h3>6.2 各状态下的操作</h3>
+<div class="dt-wrap"><table class="dt">
+<thead><tr><th>状态</th><th>展示的操作按钮</th><th>备注</th></tr></thead>
+<tbody>
+<tr><td>草稿</td><td>上线 · 编辑 · 复制 · 删除</td><td>删除需二次确认</td></tr>
+<tr><td>运行中</td><td>查看数据 · 暂停 · 结束 · 复制</td><td>暂停和结束均需二次确认；无编辑按钮</td></tr>
+<tr><td>暂停</td><td>查看数据 · 重新上线 · 编辑 · 结束 · 复制</td><td>重新上线需重新通过全部校验</td></tr>
+<tr><td>已结束</td><td>查看数据 · 复制</td><td>只读</td></tr>
+</tbody></table></div>
+
+<h3>6.3 筛选与搜索</h3>
+<ul class="doc-list">
+<li><strong>按试验名称/编号：</strong>文本模糊搜索</li>
+<li><strong>按状态：</strong>下拉单选（全部/草稿/运行中/暂停/已结束）</li>
+<li><strong>按测试板块：</strong>下拉单选，选项来源于系统维护的板块列表</li>
+<li><strong>按创建时间：</strong>日期范围选择器</li>
+</ul>
+</section>
+
+<section><div class="sh" id="s07"><span class="sn">07 /</span><h2>新建与编辑流程</h2></div>
+<h3>7.1 新建入口</h3>
+<p>试验列表页右上角「+ 新建试验」按钮，点击后以侧滑抽屉或全屏表单打开，分两步填写。</p>
+
+<h3>7.2 第一步：基本信息</h3>
+<div class="dt-wrap"><table class="dt">
+<thead><tr><th>字段</th><th>必填</th><th>说明</th><th>校验规则</th></tr></thead>
+<tbody>
+<tr><td>试验名称</td><td><span class="tag-req">必填</span></td><td>建议格式：「页面-测试内容-日期」，如「充值页-套餐顺序-0501」</td><td>不能为空，最长50字符</td></tr>
+<tr><td>负责人</td><td><span class="tag-req">必填</span></td><td>运营人员姓名或账号</td><td>不能为空</td></tr>
+<tr><td>试验假设</td><td><span class="tag-no">选填</span></td><td>说明本次试验要验证的假设，如「假设把免费体验按钮放在首位，新用户点击率会高于立即下载」。填写后便于复盘时理解背景。</td><td>最长200字符</td></tr>
+<tr><td>生效方式</td><td><span class="tag-req">必填</span></td><td>「立即生效」：上线后立即对符合分群的用户生效<br>「指定开始时间」：到达设定时间后自动开始</td><td>指定时间需晚于当前时间</td></tr>
+<tr><td>结束方式</td><td><span class="tag-req">必填</span></td><td>「手动结束」：运营手动点击结束<br>「指定结束时间」：到达时间后系统自动结束</td><td>指定时间需晚于开始时间</td></tr>
+</tbody></table></div>
+
+<h3>7.3 第二步：分群与试验配置</h3>
+<div class="dt-wrap"><table class="dt">
+<thead><tr><th>字段</th><th>必填</th><th>说明</th></tr></thead>
+<tbody>
+<tr><td>固定分群</td><td><span class="tag-req">必填</span></td><td>单选：新用户 / 老用户 / 充值过用户 / 未充值用户<br>每个选项旁展示分群定义说明</td></tr>
+<tr><td>测试板块</td><td><span class="tag-req">必填</span></td><td>从系统维护的板块列表中选择，展示板块名称+所属页面+变量类型<br>选中后下方展示该板块的变量格式说明，帮助运营正确填写变量值</td></tr>
+<tr><td>对照组配置</td><td><span class="tag-req">必填</span></td><td>根据选择的板块类型展示对应的输入控件：<br>文案类→文本输入框；图片类→图片上传/URL输入；排列类→拖拽排序；开关类→开关按钮；JSON类→JSON编辑器</td></tr>
+<tr><td>实验组配置</td><td><span class="tag-req">必填</span></td><td>与对照组配置控件类型一致；提交时检测两组值是否相同，相同时即时报错</td></tr>
+</tbody></table></div>
+
+<div class="nb info"><strong>板块说明提示：</strong>运营选择某个板块后，系统在配置区域顶部展示该板块的说明信息：所属页面、变量格式要求、填写示例、以及该板块的埋点事件名称（方便后续在看板中查看对应数据）。</div>
+
+<h3>7.4 编辑与复制</h3>
+<p>编辑仅在草稿和暂停状态下可用，打开与新建相同的两步表单并预填当前配置。暂停状态下可选「保存并重新上线」，会重新执行全部上线前校验。</p>
+<p>复制操作将所有配置复制为新草稿，试验名称加「-副本」后缀，时间字段重置为「立即生效+手动结束」，数据看板为空。</p>
+</section>
+
+<section><div class="sh" id="s08"><span class="sn">08 /</span><h2>数据看板</h2></div>
+<h3>8.1 看板入口</h3>
+<p>在试验列表页点击「查看数据」进入该试验的数据看板。运行中、暂停、已结束状态均可查看。草稿状态无数据，不展示入口。</p>
+
+<h3>8.2 看板顶部信息（只读）</h3>
+<ul class="doc-list">
+<li>试验名称、编号、当前状态、负责人</li>
+<li>测试板块名称 + 所属页面</li>
+<li>对照组配置内容 / 实验组配置内容（展示运营填写的变量值）</li>
+<li>固定分群、试验时间范围</li>
+<li>试验假设（若填写了则展示）</li>
+</ul>
+
+<h3>8.3 核心指标（通用）</h3>
+<p>以下指标适用于所有板块类型，对照组和实验组并排展示，每个指标下方展示实验组相对对照组的变化百分比。</p>
+<div class="metric-grid">
+<div class="mc"><div class="mc-lbl">曝光人数</div><div class="mc-formula">Impression UV</div><div class="mc-desc">看到该板块的去重用户数。衡量两组用户中有多少人实际触达到了测试内容。</div></div>
+<div class="mc"><div class="mc-lbl">曝光次数</div><div class="mc-formula">Impression PV</div><div class="mc-desc">该板块被展示的总次数，含同一用户多次访问。</div></div>
+<div class="mc"><div class="mc-lbl">点击人数</div><div class="mc-formula">Click UV</div><div class="mc-desc">点击过该板块任意交互元素的去重用户数。</div></div>
+<div class="mc"><div class="mc-lbl">点击次数</div><div class="mc-formula">Click PV</div><div class="mc-desc">该板块被点击的总次数，含同一用户多次点击。</div></div>
+<div class="mc"><div class="mc-lbl">点击率</div><div class="mc-formula">Click UV ÷ Impression UV</div><div class="mc-desc">曝光用户中实际发生点击的比例。这是判断「实验版本是否更能吸引用户点击」的核心指标。</div></div>
+<div class="mc"><div class="mc-lbl">人均点击次数</div><div class="mc-formula">Click PV ÷ Click UV</div><div class="mc-desc">点击用户的平均点击次数。数值偏高说明用户在该区域有反复操作行为。</div></div>
+</div>
+
+<h3>8.4 业务转化指标（按板块类型扩展）</h3>
+<p>除通用指标外，各板块可根据其业务目标配置额外的转化指标，由技术在板块接入时定义对应的埋点事件。</p>
+<div class="dt-wrap"><table class="dt">
+<thead><tr><th>板块类型示例</th><th>扩展转化指标</th><th>对应埋点事件</th></tr></thead>
+<tbody>
+<tr><td>充值页-套餐配置</td><td>创建订单数、实付订单数、实付金额、支付转化率、客单价</td><td>order_create、order_pay</td></tr>
+<tr><td>首页-Banner</td><td>Banner跳转点击率、跳转后页面停留时长、跳转后转化率</td><td>banner_click、page_stay</td></tr>
+<tr><td>游戏详情页-下载按钮</td><td>下载点击率、下载完成率、下载后首次启动率</td><td>download_click、download_complete</td></tr>
+<tr><td>引导弹窗</td><td>弹窗关闭率、引导完成率、引导后付费转化率</td><td>popup_close、guide_complete</td></tr>
+</tbody></table></div>
+<div class="nb info"><strong>指标扩展机制：</strong>每个板块在系统中注册时，同时配置该板块关联的业务转化埋点事件名称列表。看板会自动拉取这些事件的数据并计算对应指标，无需每次新建试验时手动配置。</div>
+
+<h3>8.5 时序折线图</h3>
+<ul class="doc-list">
+<li>支持「按天」和「按小时」切换，默认按天展示</li>
+<li>对照组和实验组各一条折线，颜色区分</li>
+<li>支持选择展示的指标，默认展示「点击率」</li>
+<li>鼠标悬停展示气泡提示：该时间点两组各自的指标值及差异百分比</li>
+<li>若试验曾被暂停，暂停时间段用灰色区域标注；结束时间点用虚线标注</li>
+</ul>
+<div class="nb warn"><strong>注意时间周期性波动：</strong>平台周末日活明显高于工作日，若试验刚好跨越周末，看板数据可能受到流量波动影响。建议至少运行7天（覆盖一个完整的周内周期）再下结论，通过时序图识别波动规律。</div>
+
+<h3>8.6 明细数据与导出</h3>
+<p>看板底部展示按天（或小时）的明细数据表格，支持导出为CSV，包含所有统计字段的原始数据。</p>
+</section>
+
+<section><div class="sh" id="s09"><span class="sn">09 /</span><h2>暂停与结束</h2></div>
+<h3>9.1 暂停</h3>
+<div class="rule-list">
+<div class="rule-item"><div class="rule-k">触发方式</div><div class="rule-v">列表页点击「暂停」，弹出二次确认：「确定暂停该试验？暂停后所有用户将立即看到默认版本，试验数据保留。」双按钮：「取消」/ 「确认暂停」</div></div>
+<div class="rule-item"><div class="rule-k">生效时机</div><div class="rule-v"><strong>立即生效</strong>——后端将试验状态改为暂停，前端接入接口立即停止返回该试验的分组信息，用户下次访问对应页面时即看到默认版本，不存在延迟</div></div>
+<div class="rule-item"><div class="rule-k">暂停后操作</div><div class="rule-v">暂停状态下可编辑所有配置，编辑完成后选择「保存并重新上线」，重新执行全部上线前校验通过后恢复运行</div></div>
+</div>
+
+<h3>9.2 结束</h3>
+<div class="rule-list">
+<div class="rule-item"><div class="rule-k">触发方式</div><div class="rule-v">列表页点击「结束」，弹出不可撤回警告：「确定结束该试验？结束后不可重新上线，历史数据仍可查看。此操作不可撤回。」双按钮：「取消」/ 红色「确认结束」</div></div>
+<div class="rule-item"><div class="rule-k">生效时机</div><div class="rule-v">立即生效，行为与暂停一致——所有用户立即回退默认版本，状态改为已结束</div></div>
+<div class="rule-item"><div class="rule-k">后续迭代</div><div class="rule-v">可复制为新草稿，修改实验组配置后重新上线。推荐工作流：测试→得出结论→复制→调整配置→再次测试</div></div>
+</div>
+
+<h3>9.3 自动结束</h3>
+<p>若设置了指定结束时间，后端通过定时任务（建议每分钟轮询）自动将到期试验状态改为已结束，行为与手动结束完全一致。自动结束后向创建人发送站内信通知。</p>
+</section>
+
+<section><div class="sh" id="s10"><span class="sn">10 /</span><h2>前端接入规范</h2></div>
+<h3>10.1 AB 分组接口</h3>
+<div class="spec-card"><div class="spec-head">接口规格（建议）</div>
+<div class="sr"><span class="sk">接口路径</span><span class="sv"><code>GET /api/ab/experiment</code></span></div>
+<div class="sr"><span class="sk">请求参数</span><span class="sv"><code>user_id</code>（必传）、<code>module</code>（必传，测试板块标识，如 <code>recharge_package</code>、<code>home_banner</code>）</span></div>
+<div class="sr"><span class="sk">响应结构</span><span class="sv">
+命中试验：<code>{"hit": true, "experiment_id": "xxx", "group": "control"/"experiment", "value": "对应组的变量值"}</code><br>
+未命中/未登录：<code>{"hit": false, "value": "该板块的默认值"}</code>
+</span></div>
+<div class="sr"><span class="sk">超时阈值</span><span class="sv">建议200ms；超时后降级展示默认版本，不阻塞页面渲染</span></div>
+<div class="sr"><span class="sk">降级策略</span><span class="sv">接口超时、异常、服务不可用时，均降级返回默认值，保证页面正常展示</span></div>
+</div>
+
+<h3>10.2 前端接入流程</h3>
+<div class="steps">
+<div class="step"><div class="step-left"><div class="step-num">1</div><div class="step-line"></div></div>
+<div class="step-body"><div class="step-title">页面加载时请求 AB 分组接口</div>
+<div class="step-desc">传入 user_id 和当前页面的 module 标识，获取分组结果和对应的变量值。未登录用户不传 user_id，接口返回默认值。</div></div></div>
+<div class="step"><div class="step-left"><div class="step-num">2</div><div class="step-line"></div></div>
+<div class="step-body"><div class="step-title">根据返回的 value 渲染对应版本</div>
+<div class="step-desc">前端直接使用接口返回的 value 渲染对应板块，<strong>对用户不展示任何「你在参与AB测试」的提示</strong>。前端不做任何分组判断逻辑，只消费接口返回的值。</div></div></div>
+<div class="step"><div class="step-left"><div class="step-num">3</div><div class="step-line"></div></div>
+<div class="step-body"><div class="step-title">用户产生交互时上报埋点</div>
+<div class="step-desc">用户点击、曝光等行为发生时，埋点事件需携带：<code>user_id</code>、<code>module</code>、<code>event_type</code>（如 click/impression）<br>若命中试验额外携带：<code>experiment_id</code>、<code>group</code>（control/experiment）<br>未命中试验时不传 experiment 相关字段</div></div></div>
+<div class="step"><div class="step-left"><div class="step-num">4</div></div>
+<div class="step-body"><div class="step-title">新增板块接入流程</div>
+<div class="step-desc">运营希望对某个新板块做AB测试时，需先由技术人员完成该板块的接入工作：①在系统中注册板块（配置板块名称、module标识、变量格式、关联的业务埋点事件）；②前端在对应位置接入AB接口调用；③前端在用户交互时携带 experiment_id 和 group 上报埋点。完成后运营即可在后台创建该板块的试验。</div></div></div>
+</div>
+
+<div class="nb danger"><strong>严禁前端分组：</strong>禁止在页面前端代码中实现分组判断逻辑（如根据user_id奇偶决定展示哪个版本）。分组必须由后端统一处理，前端只消费接口返回的变量值。原因：前端逻辑可被用户绕过；前端代码修改后无法对已分组用户生效；分组结果无法被正确记录统计。</div>
+</section>
+
+<section><div class="sh" id="s11"><span class="sn">11 /</span><h2>技术规范</h2></div>
+<h3>11.1 数据库表结构建议</h3>
+<h4>试验主表 ab_experiments</h4>
+<div class="dt-wrap"><table class="dt">
+<thead><tr><th>字段名</th><th>类型</th><th>说明</th></tr></thead>
+<tbody>
+<tr><td>id</td><td>BIGINT PK</td><td>自增主键</td></tr>
+<tr><td>experiment_no</td><td>VARCHAR(30) UNIQUE</td><td>试验编号，格式 AB-YYYYMMDD-XXXX</td></tr>
+<tr><td>name</td><td>VARCHAR(100)</td><td>试验名称</td></tr>
+<tr><td>hypothesis</td><td>TEXT</td><td>试验假设（选填）</td></tr>
+<tr><td>owner</td><td>VARCHAR(50)</td><td>负责人</td></tr>
+<tr><td>status</td><td>ENUM('draft','running','paused','ended')</td><td>试验状态</td></tr>
+<tr><td>segment</td><td>ENUM('new_user','old_user','paid_user','unpaid_user')</td><td>固定分群</td></tr>
+<tr><td>module</td><td>VARCHAR(100)</td><td>测试板块标识，如 recharge_package、home_banner</td></tr>
+<tr><td>module_name</td><td>VARCHAR(100)</td><td>测试板块展示名称，如「充值页-套餐排列」</td></tr>
+<tr><td>variable_type</td><td>ENUM('text','image','array','boolean','json')</td><td>变量值类型</td></tr>
+<tr><td>control_value</td><td>TEXT</td><td>对照组变量值</td></tr>
+<tr><td>experiment_value</td><td>TEXT</td><td>实验组变量值</td></tr>
+<tr><td>start_mode</td><td>ENUM('immediate','scheduled')</td><td>生效方式</td></tr>
+<tr><td>end_mode</td><td>ENUM('manual','scheduled')</td><td>结束方式</td></tr>
+<tr><td>start_time</td><td>DATETIME</td><td>实际开始时间</td></tr>
+<tr><td>end_time</td><td>DATETIME NULLABLE</td><td>计划结束时间</td></tr>
+<tr><td>actual_end_time</td><td>DATETIME NULLABLE</td><td>实际结束时间</td></tr>
+<tr><td>created_by</td><td>VARCHAR(50)</td><td>创建人账号</td></tr>
+<tr><td>created_at</td><td>DATETIME</td><td>创建时间</td></tr>
+<tr><td>updated_at</td><td>DATETIME</td><td>最后更新时间</td></tr>
+</tbody></table></div>
+
+<h4>板块注册表 ab_modules</h4>
+<div class="dt-wrap"><table class="dt">
+<thead><tr><th>字段名</th><th>类型</th><th>说明</th></tr></thead>
+<tbody>
+<tr><td>id</td><td>BIGINT PK</td><td>自增主键</td></tr>
+<tr><td>module</td><td>VARCHAR(100) UNIQUE</td><td>板块唯一标识，前端调用接口时传入此值</td></tr>
+<tr><td>name</td><td>VARCHAR(100)</td><td>板块展示名称，如「充值页-套餐排列」</td></tr>
+<tr><td>page</td><td>VARCHAR(50)</td><td>所属页面，如「充值页」「首页」</td></tr>
+<tr><td>variable_type</td><td>ENUM('text','image','array','boolean','json')</td><td>变量值类型，决定配置界面的输入控件</td></tr>
+<tr><td>variable_desc</td><td>TEXT</td><td>变量格式说明和填写示例，展示给运营看</td></tr>
+<tr><td>default_value</td><td>TEXT</td><td>该板块的默认值，未命中试验时返回此值</td></tr>
+<tr><td>metric_events</td><td>JSON</td><td>该板块关联的业务埋点事件列表，看板自动拉取这些事件的数据</td></tr>
+<tr><td>status</td><td>ENUM('active','inactive')</td><td>板块是否可用于创建试验</td></tr>
+</tbody></table></div>
+
+<h4>用户分组记录表 ab_user_groups</h4>
+<div class="dt-wrap"><table class="dt">
+<thead><tr><th>字段名</th><th>类型</th><th>说明</th></tr></thead>
+<tbody>
+<tr><td>id</td><td>BIGINT PK</td><td>自增主键</td></tr>
+<tr><td>experiment_id</td><td>BIGINT FK</td><td>关联试验ID</td></tr>
+<tr><td>user_id</td><td>BIGINT</td><td>用户ID</td></tr>
+<tr><td>group_name</td><td>ENUM('control','experiment')</td><td>所属组别</td></tr>
+<tr><td>assigned_at</td><td>DATETIME</td><td>分组时间</td></tr>
+</tbody></table></div>
+<p>索引建议：<code>(experiment_id, user_id)</code> 建联合唯一索引。</p>
+
+<h4>看板统计表 ab_stats_daily</h4>
+<div class="dt-wrap"><table class="dt">
+<thead><tr><th>字段名</th><th>类型</th><th>说明</th></tr></thead>
+<tbody>
+<tr><td>experiment_id</td><td>BIGINT</td><td>关联试验ID</td></tr>
+<tr><td>group_name</td><td>ENUM('control','experiment')</td><td>组别</td></tr>
+<tr><td>stat_date</td><td>DATE</td><td>统计日期</td></tr>
+<tr><td>impression_uv</td><td>INT</td><td>曝光人数</td></tr>
+<tr><td>impression_pv</td><td>INT</td><td>曝光次数</td></tr>
+<tr><td>click_uv</td><td>INT</td><td>点击人数</td></tr>
+<tr><td>click_pv</td><td>INT</td><td>点击次数</td></tr>
+<tr><td>ext_metrics</td><td>JSON</td><td>各板块扩展业务指标，key为埋点事件名，value为统计值</td></tr>
+<tr><td>updated_at</td><td>DATETIME</td><td>最后更新时间</td></tr>
+</tbody></table></div>
+
+<h3>11.2 Redis 缓存设计</h3>
+<div class="dt-wrap"><table class="dt">
+<thead><tr><th>用途</th><th>Key格式</th><th>Value</th><th>TTL</th></tr></thead>
+<tbody>
+<tr><td>用户分组结果</td><td><code>ab:group:{experiment_id}:{user_id}</code></td><td>control 或 experiment</td><td>试验结束时间 + 1小时</td></tr>
+<tr><td>当前运行中试验（按板块）</td><td><code>ab:running:{module}</code></td><td>试验完整配置（JSON）</td><td>5分钟</td></tr>
+<tr><td>板块默认值</td><td><code>ab:default:{module}</code></td><td>默认变量值</td><td>10分钟</td></tr>
+</tbody></table></div>
+
+<h3>11.3 性能要求</h3>
+<ul class="doc-list">
+<li><strong>AB分组接口：</strong>P99响应时间 &lt; 100ms（有Redis缓存加持）</li>
+<li><strong>超时降级：</strong>接口超时阈值200ms，超时后直接返回默认值，不重试，不阻塞页面</li>
+<li><strong>看板数据：</strong>每小时更新一次，可接受1小时内的数据延迟</li>
+<li><strong>状态变更生效：</strong>暂停/结束操作在3秒内完成，立即对新请求生效</li>
+</ul>
+</section>
+
+<section><div class="sh" id="s12"><span class="sn">12 /</span><h2>验收标准</h2></div>
+<h3>12.1 功能验收清单</h3>
+<div class="dt-wrap"><table class="dt">
+<thead><tr><th>#</th><th>验收项</th><th>验收标准</th><th>优先级</th></tr></thead>
+<tbody>
+<tr><td>1</td><td>新建试验两步流程</td><td>两步表单可完整填写并提交，必填字段缺失时有明确提示</td><td><span class="p0">P0</span></td></tr>
+<tr><td>2</td><td>上线前9条校验</td><td>5.3节所有校验规则均生效，失败时展示对应错误提示并定位到对应字段</td><td><span class="p0">P0</span></td></tr>
+<tr><td>3</td><td>同时只允许一个运行中试验</td><td>尝试上线第二个试验时，系统拦截并展示当前运行中试验名称和跳转链接</td><td><span class="p0">P0</span></td></tr>
+<tr><td>4</td><td>运行中禁止编辑（双重拦截）</td><td>前端编辑按钮不可点击；直接调后端编辑接口也返回错误拒绝修改</td><td><span class="p0">P0</span></td></tr>
+<tr><td>5</td><td>分组一致性</td><td>同一用户在同一试验中，刷新5次访问对应页面，每次接口返回的group和value一致</td><td><span class="p0">P0</span></td></tr>
+<tr><td>6</td><td>分群筛选正确</td><td>试验分群为「新用户」时：老用户账号接口返回hit:false；新用户账号接口返回hit:true</td><td><span class="p0">P0</span></td></tr>
+<tr><td>7</td><td>暂停立即生效</td><td>暂停确认后，下一个请求接口即返回hit:false和默认值，不超过1次请求延迟</td><td><span class="p0">P0</span></td></tr>
+<tr><td>8</td><td>结束后不可再上线</td><td>已结束试验不展示上线按钮；调接口尝试上线也返回错误</td><td><span class="p0">P0</span></td></tr>
+<tr><td>9</td><td>未登录用户不参与分组</td><td>未传user_id调用接口，返回hit:false和默认值</td><td><span class="p0">P0</span></td></tr>
+<tr><td>10</td><td>接口超时降级</td><td>模拟接口超时，前端正常展示默认版本，不出现空白或报错</td><td><span class="p0">P0</span></td></tr>
+<tr><td>11</td><td>看板通用指标正确</td><td>曝光/点击相关指标数值与埋点数据一致，点击率计算公式正确</td><td><span class="p0">P0</span></td></tr>
+<tr><td>12</td><td>自动结束</td><td>创建结束时间为3分钟后的试验并上线，3分钟后状态自动变为已结束，接口返回默认值</td><td><span class="p0">P0</span></td></tr>
+<tr><td>13</td><td>板块注册与接入</td><td>新注册一个板块后，运营可在创建试验时选择该板块，前端接入后接口正确返回对应变量值</td><td><span class="p0">P0</span></td></tr>
+<tr><td>14</td><td>复制功能</td><td>复制后所有配置正确继承，时间字段重置，状态为草稿，名称加「-副本」</td><td><span class="p1">P1</span></td></tr>
+<tr><td>15</td><td>时序折线图</td><td>图表正常渲染，按天/按小时切换数据变化正确，暂停时间段有灰色标注</td><td><span class="p1">P1</span></td></tr>
+<tr><td>16</td><td>扩展业务指标</td><td>选择充值页板块创建试验后，看板中自动展示订单相关指标</td><td><span class="p1">P1</span></td></tr>
+<tr><td>17</td><td>SRM检查警告</td><td>模拟两组用户比例严重失衡，看板顶部展示SRM警告</td><td><span class="p1">P1</span></td></tr>
+<tr><td>18</td><td>数据导出</td><td>导出CSV包含所有明细字段，数据与页面展示一致</td><td><span class="p1">P1</span></td></tr>
+</tbody></table></div>
+
+<h3>12.2 边界情况</h3>
+<div class="rule-list">
+<div class="rule-item"><div class="rule-k">板块未接入</div><div class="rule-v">运营选择了某个板块创建并上线试验，但该板块前端尚未完成AB接入（即从未调用过AB分组接口传入该module），此时试验运行中但实际没有任何用户被分组，看板数据全为0。需在板块注册时注明接入状态，避免运营对未接入板块创建试验。</div></div>
+<div class="rule-item"><div class="rule-k">用户身份变化</div><div class="rule-v">用户首次触达该板块时完成分群判断并分组，结果写入Redis缓存。此后用户身份发生变化（如未充值用户完成了首充），分组结果不会变化——这是正确行为，保证了分组一致性。</div></div>
+<div class="rule-item"><div class="rule-k">同一用户满足多个分群</div><div class="rule-v">一个用户可能同时满足多个分群条件（如既是老用户又是充值过用户），但由于同一时间只有一个运行中的试验，不会出现「命中多个试验」的情况，无需处理。</div></div>
+<div class="rule-item"><div class="rule-k">大量并发请求</div><div class="rule-v">高峰期（如活动期）充值页等热门板块请求量急剧上升，Redis缓存应覆盖大部分请求。若Redis不可用，降级为直接查数据库（加超时保护），最终兜底为返回默认值。</div></div>
+</div>
+
+</section>
+
+<footer>
+<span>18GAME 后台 · AB测试平台开发需求文档 · v1.0 · 2026年4月</span>
+<span>参考：苹果PPO统计方法论 · 内部v3/v4草稿</span>
+</footer>
+</div>
+
+<script>
+const secs=["top","s01","s02","s03","s04","s05","s06","s07","s08","s09","s10","s11","s12"];
+document.querySelectorAll("a.nav-item").forEach(a=>{
+  a.addEventListener("click",e=>{
+    e.preventDefault();
+    const id=a.getAttribute("href").replace("#","");
+    const el=document.getElementById(id);
+    if(el){const off=document.getElementById("nav").offsetHeight+16;
+    window.scrollTo({top:el.getBoundingClientRect().top+window.scrollY-off,behavior:"smooth"});}
+  });
+});
+let nh=0;
+window.addEventListener("scroll",()=>{
+  if(!nh)nh=document.getElementById("nav").offsetHeight;
+  const sy=window.scrollY+nh+40;let cur=secs[0];
+  secs.forEach(id=>{const el=document.getElementById(id);
+  if(el&&el.getBoundingClientRect().top+window.scrollY<=sy)cur=id;});
+  document.querySelectorAll(".nav-item").forEach(a=>{
+  a.classList.toggle("active",a.getAttribute("href")==="#"+cur);});
+});
+</script>
+</body>
+</html>
